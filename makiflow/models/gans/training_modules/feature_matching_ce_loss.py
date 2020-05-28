@@ -96,14 +96,17 @@ class FeatureBinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
         else:
             self._feature_matching_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels,
                                                                                   logits=self._logits,
-                                                                                  name='generator_loss')
-            self._feature_matching_loss = tf.reduce_mean(self._feature_matching_loss)
+                                                                                  name='generator_loss'
+            )
+
+            self._feature_matching_loss += tf.reduce_mean(self._feature_matching_loss)
             feature_loss = tf.reduce_mean(
                 tf.square(
                     tf.reduce_mean(self._feature_output_fake, axis=0) - \
                     tf.reduce_mean(self._feature_output_real, axis=0)
                 )
             ) * self._feature_scale
+            
             self._feature_matching_loss += feature_loss
 
         # additional loss l1/l2
