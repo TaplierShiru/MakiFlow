@@ -55,6 +55,12 @@ class GANsBasic(MakiCore):
             feed_dict={self._input_data_tensors[0]: x}
         )
 
+    def is_use_l1(self) -> bool:
+        """
+        Return bool variable which shows whether it is being used l1/l2 or not.
+        """
+        return self._use_l1 if self._use_l1 is not None else False
+
     def _get_model_info(self):
         return {
             GANsBasic.NAME: self.name,
@@ -78,14 +84,20 @@ class GANsBasic(MakiCore):
     def get_logits_shape(self):
         return self._outputs[0].get_shape()
 
+    def get_outputs_maki_tensors(self) -> list:
+        return self._outputs
+
     def get_input_shape(self):
         shape = self._inputs[0].get_shape()
         return shape
 
+    def get_inputs_maki_tensors(self) -> list:
+        return self._inputs
+
     # ------------------------------------------------------------------------------------------------------------------
     # --------------------------------------------------ADDITIONAL TOOLS FOR TRAINING-----------------------------------
 
-    def _return_training_graph_from_certain_output(self, output: MakiTensor, train=True):
+    def _return_training_graph_from_certain_output(self, output: MakiTensor, train=True, name_layer_return=None):
         # Contains pairs {layer_name: tensor}, where `tensor` is output
         # tensor of layer called `layer_name`
         output_tensors = {}
@@ -114,6 +126,9 @@ class GANsBasic(MakiCore):
                 return output_tensors[from_.get_name()]
 
         training_outputs = create_tensor(output)
+        if name_layer_return is not None:
+            return training_outputs[name_layer_return]
+
         return training_outputs
 
     def add_l1_or_l2_loss(self, use_l1=True, scale=10.0):

@@ -27,11 +27,8 @@ from makiflow.base import MakiTensor
 
 from copy import copy
 
-EPSILON = np.float32(1e-32)
-
 
 class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
-
     TRAIN_COSTS = 'train costs'
 
     def _prepare_training_vars(self):
@@ -48,7 +45,7 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
                                    shape=self._logits.get_shape().as_list(),
                                    dtype=tf.float32,
                                    name='gen_label'
-        )
+                                   )
 
         # prepare inputs and outputs for l1 or l2 if it need
         if self._use_l1 is not None:
@@ -57,74 +54,48 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
 
         self._training_vars_are_ready = True
 
-    def _return_training_graph_by_name_at_certain_tensor(self, name_layer,
-                                                         output:MakiTensor,
-                                                         name_input, input_shape,
-                                                         train=False):
-        # Contains pairs {layer_name: tensor}, where `tensor` is output
-        # tensor of layer called `layer_name`
-        output_tensors = {}
-        used = {}
-
-        def create_tensor(from_):
-
-            if used.get(from_.get_name()) is None:
-                layer = from_.get_parent_layer()
-                used[layer.get_name()] = True
-                X = copy(from_.get_data_tensor())
-                takes = []
-                # Check if we at the beginning of the computational graph, i.e. InputLayer
-                if len(from_.get_parent_tensor_names()) != 0:
-                    for elem in from_.get_parent_tensors():
-                        takes += [create_tensor(elem)]
-
-                    if layer.get_name() in self._trainable_layers and train:
-                        X = layer._training_forward(takes[0] if len(takes) == 1 else takes)
-                    else:
-                        X = layer._forward(takes[0] if len(takes) == 1 else takes)
-
-                output_tensors[layer.get_name()] = X
-                return X
-            else:
-                return output_tensors[from_.get_name()]
-
-        _ = create_tensor(output)
-        return output_tensors[name_layer]
-
-    def add_feature_matching(self, layer_tensor_feature_disc: MakiTensor, use_feature_loss_only=False):
+    def add_feature_matching(self, layer_tensor_feature_disc: MakiTensor,
+                             use_feature_loss_only=False,
+                             feature_scale=1.0):
         # `layer_name_disc` will be used in the L2 loss for feature matching
-        self._setup_for_training()
-        self._prepare_training_vars()
+        if not self._set_for_training:
+            self._setup_for_training()
 
-        self._feature_output_fake = self._return_training_graph_by_name_at_certain_tensor(layer_tensor_feature_disc.get_name(),
-                                                                name_input='feature_fake_input', 
-                                                                output=self._outputs[0],
-                                                                input_shape = self._inputs[0].get_shape()
+        if not self._training_vars_are_ready:
+            self._prepare_training_vars()
+        self._feature_output_fake = super()._return_training_graph_from_certain_output(
+            name_layer_return=layer_tensor_feature_disc.get_name(),
+            output=self._outputs[0],
         )
         self._feature_output_real, self._feature_input_real = (layer_tensor_feature_disc.get_data_tensor(),
-                                                              self._discriminator._inputs[0].get_data_tensor())
-        
+                                                               self._discriminator._inputs[0].get_data_tensor())
+
         self._feature_loss = True
+        self._feature_scale = feature_scale
         self._use_feature_loss_only = use_feature_loss_only
 
-    def _build_binary_ce_loss(self):
+    def _build_feature_matching_loss(self):
 
-        #self._binary_ce_loss = self._labels * tf.log(1 - self._logits + EPSILON)
+        # self._feature_matching_loss = self._labels * tf.log(1 - self._logits + EPSILON)
         if self._use_feature_loss_only:
-            self._binary_ce_loss = tf.reduce_mean(
-                           tf.square(
-                           tf.reduce_mean(self._feature_output_fake, axis = 0) - tf.reduce_mean(self._feature_output_real, axis = 0))
-            )
+            self._feature_matching_loss = tf.reduce_mean(
+                tf.square(
+                    tf.reduce_mean(self._feature_output_fake, axis=0) - tf.reduce_mean(self._feature_output_real,axis=0)
+                )
+            ) * self._feature_scale
         else:
-            self._binary_ce_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels,
-                                                                           logits=self._logits, name='generator_loss')
-            self._binary_ce_loss = tf.reduce_mean(self._binary_ce_loss)
+            self._feature_matching_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels,
+                                                                                  logits=self._logits,
+                                                                                  name='generator_loss')
+            self._feature_matching_loss = tf.reduce_mean(self._feature_matching_loss)
             if self._feature_loss:
                 feature_loss = tf.reduce_mean(
-                               tf.square(
-                               tf.reduce_mean(self._feature_output_fake, axis = 0) - tf.reduce_mean(self._feature_output_real, axis = 0))
-                )
-                self._binary_ce_loss += feature_loss
+                    tf.square(
+                        tf.reduce_mean(self._feature_output_fake, axis=0) - \
+                        tf.reduce_mean(self._feature_output_real, axis=0)
+                    )
+                ) * self._feature_scale
+                self._feature_matching_loss += feature_loss
 
         # additional loss l1/l2
         if self._use_l1 is not None:
@@ -134,42 +105,42 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
             else:
                 # build l2
                 additional_loss = tf.reduce_mean(
-                                  tf.square(self._gen_product - self._feature_input_real)
+                    tf.square(self._gen_product - self._feature_input_real)
                 ) * 0.5 * self._lambda
             # add aditional loss to final loss
-            self._binary_ce_loss += additional_loss
+            self._feature_matching_loss += additional_loss
 
-        self._final_binary_ce_loss = self._build_final_loss(self._binary_ce_loss)
+        self._final_feature_matching_loss = self._build_final_loss(self._feature_matching_loss)
 
-        self._binary_ce_loss_is_built = True
+        self._feature_matching_loss_is_built = True
 
     def _minimize_ce_loss(self, optimizer, global_step):
         if not self._set_for_training:
-            super()._setup_for_training()
+            self._setup_for_training()
 
         if not self._training_vars_are_ready:
             self._prepare_training_vars()
 
-        if not self._binary_ce_loss_is_built:
+        if not self._feature_matching_loss_is_built:
             # no need to setup any inputs for this loss
-            self._build_binary_ce_loss()
-            self._binary_ce_optimizer = optimizer
-            self._binary_ce_train_op = optimizer.minimize(
-                self._final_binary_ce_loss, var_list=self._trainable_vars, global_step=global_step
+            self._build_feature_matching_loss()
+            self._feature_optimizer = optimizer
+            self._feature_train_up = optimizer.minimize(
+                self._final_feature_matching_loss, var_list=self._trainable_vars, global_step=global_step
             )
             self._session.run(tf.variables_initializer(optimizer.variables()))
-            self._binary_ce_loss_is_built = True
+            self._feature_matching_loss_is_built = True
             loss_is_built()
 
-        if self._binary_ce_optimizer != optimizer:
+        if self._feature_optimizer != optimizer:
             new_optimizer_used()
-            self._binary_ce_optimizer = optimizer
-            self._binary_ce_train_op = optimizer.minimize(
-                self._final_binary_ce_loss, var_list=self._trainable_vars, global_step=global_step
+            self._feature_optimizer = optimizer
+            self._feature_train_up = optimizer.minimize(
+                self._final_feature_matching_loss, var_list=self._trainable_vars, global_step=global_step
             )
             self._session.run(tf.variables_initializer(optimizer.variables()))
 
-        return self._binary_ce_train_op
+        return self._feature_train_up
 
     def fit_feature_ce(
             self, Xgen, Xreal, optimizer=None, epochs=1, global_step=None
@@ -207,7 +178,7 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
 
         assert (optimizer is not None)
         assert (self._session is not None)
-        assert self._feature_loss == True, "Feature loss is not added!"
+        assert self._feature_loss, "Feature loss is not added!"
         train_op = self._minimize_ce_loss(optimizer, global_step)
         train_costs = []
 
@@ -219,7 +190,7 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
                     generated = self._generator.get_noise()
 
                 train_cost_batch, _ = self._session.run(
-                    [self._final_binary_ce_loss, train_op],
+                    [self._final_feature_matching_loss, train_op],
                     feed_dict={self._images: generated, self._feature_input_real: Xreal}
                 )
 

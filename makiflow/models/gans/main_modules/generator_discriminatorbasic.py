@@ -21,20 +21,23 @@ from .gansbasic import GANsBasic
 class GeneratorDiscriminatorBasic(GANsBasic):
 
     def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
-        gen_in_x = generator._inputs[0]
-        gen_output_x = generator._outputs[0]
+        gen_in_x = generator.get_inputs_maki_tensors()[0]
+        gen_output_x = generator.get_outputs_maki_tensors()[0]
 
         self._generator = generator
         self._discriminator = discriminator
 
-        disc_in_x = discriminator._inputs[0]
-        disc_output_x = discriminator._outputs[0]
+        disc_in_x = discriminator.get_inputs_maki_tensors()[0]
+        disc_output_x = discriminator.get_outputs_maki_tensors()[0]
 
         connected_maki_tensors_output = self._connect_generator_disc_graph(gen_output_x, disc_in_x, disc_output_x)[0]
 
         super().__init__(input_s=gen_in_x, output=connected_maki_tensors_output, name=name)
 
     def _connect_generator_disc_graph(self, output_generator, input_discriminator, output_discriminator):
+        """
+        Connect two graph in one, which is used for training
+        """
         stop_point = input_discriminator.get_name()
         outputs = [output_discriminator]
         
@@ -54,7 +57,7 @@ class GeneratorDiscriminatorBasic(GANsBasic):
                     for elem in from_.get_parent_tensors():
                         find_names(elem)
                     
-                        
+        # Create list of the layers names from discriminator
         for output in outputs:
             find_names(output)  
         # Contains pairs {layer_name: tensor}, where `tensor` is output

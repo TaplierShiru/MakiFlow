@@ -16,22 +16,21 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from ..main_modules import GANsBasic
+from ..main_modules import GANsBasic, GeneratorDiscriminatorBasic
 
 import tensorflow as tf
-from makiflow.models.common.utils import print_train_info, moving_average
+from makiflow.models.common.utils import moving_average
 from makiflow.models.common.utils import new_optimizer_used, loss_is_built
 import numpy as np
 from sklearn.utils import shuffle
-from makiflow.models.classificator.utils import error_rate, sparse_cross_entropy
-from makiflow.base import MakiTensor
-from copy import copy
+from makiflow.models.classificator.utils import error_rate
 EPSILON = np.float32(1e-32)
 
 
-class BinaryCETrainingModuleGenerator(GANsBasic):
+class BinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
 
     TRAIN_COSTS = 'train costs'
+    GEN_LABEL = 'gen_label'
 
     def _prepare_training_vars(self):
         if not self._set_for_training:
@@ -46,13 +45,13 @@ class BinaryCETrainingModuleGenerator(GANsBasic):
         self._labels = tf.constant(np.ones(self._logits.get_shape().as_list()),
                                    shape=self._logits.get_shape().as_list(),
                                    dtype=tf.float32,
-                                   name='gen_label'
+                                   name=BinaryCETrainingModuleGenerator.GEN_LABEL
         )
         # prepare inputs and outputs for l1 or l2 if it need
         if self._use_l1 is not None:
             self._input_real_image = tf.placeholder(dtype=np.float32, shape=self._discriminator.get_input_shape())
             # create output tensor from generator (in train set up)
-            self._gen_product = self._return_training_graph_by_name(self._generator._outputs[0])
+            self._gen_product = self._return_training_graph_from_certain_output(self._generator.get_outputs_maki_tensors()[0])
 
         self._training_vars_are_ready = True
 

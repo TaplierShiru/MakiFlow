@@ -156,6 +156,7 @@ class FeatureSimpleGAN:
 
                 # close tqdm iterator for out safe
                 iterator.close()
+
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
                     print('Test....')
@@ -170,8 +171,13 @@ class FeatureSimpleGAN:
 
                     if final_image_size is not None:
                         generated_images = generated_images.reshape(generated_images.shape[0], *final_image_size)
-                    
-                    generated_images = np.clip(restore_image_function(generated_images, self._session), 0.0, 255.0).astype(np.uint8)
+
+                    # Give session of there is some special normalization via TensorFlow
+                    generated_images = np.clip(
+                        restore_image_function(generated_images, self._session),
+                        0.0,
+                        255.0
+                    ).astype(np.uint8)
                     
                     plt.figure(figsize=(20, 20))
                     for z in range(min(batch_size, 100)):

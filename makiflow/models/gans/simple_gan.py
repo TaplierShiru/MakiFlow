@@ -24,7 +24,8 @@ import cv2
 
 from makiflow.models.common.utils import moving_average
 
-from .main_modules import GeneratorDiscriminatorBasic, GANsBasic
+from .main_modules import GeneratorDiscriminatorBasic
+from .generator import Generator
 
 from .training_modules import BinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
 
@@ -41,10 +42,25 @@ class GeneratorDiscriminator(BinaryCETrainingModuleGenerator, GeneratorDiscrimin
 
 class SimpleGAN:
 
-    def __init__(self, generator, discriminator, generator_discriminator):
+    def __init__(self,
+                 generator: Generator,
+                 discriminator: Discriminator,
+                 generator_discriminator: GeneratorDiscriminator):
+        """
+        Create simple GANs model for training.
+
+        Parameters
+        ----------
+        generator : Generator
+            Model of the generator.
+        discriminator : Discriminator
+            Model of the discriminator.
+        generator_discriminator : GeneratorDiscriminator
+            Combined model of the discriminator and generator, which is used for training.
+        """
         self._discriminator = discriminator
         self._generator = generator
-        # Set layers from generator in disciminator as untrainable
+        # Set layers from generator in `generator_discriminator` as untrained
         untrain = []
         generator_names = list(generator.get_layers_names().keys())
         for name in generator_discriminator.get_layers_names().keys():
@@ -54,12 +70,19 @@ class SimpleGAN:
         generator_discriminator.set_layers_trainable(untrain)
         self._session = None
         self._generator_discriminator = generator_discriminator
-        # generator(pipeline) variable
+        # Variable for generators (pipeline stuff)
         self._generator_is_set = False
         self._gen_in_target = None
         self._gen_in_input = None
 
     def set_session(self, sess : tf.Session):
+        """
+        Set session in generator, discriminator, generator and discriminator (combined model) models.
+
+        Parameters
+        ----------
+        sess : tf.Session
+        """
         self._session = sess
 
         self._generator_discriminator.set_session(sess)
@@ -91,13 +114,32 @@ class SimpleGAN:
         show_images=False,
         label_smoothing=0.9,
         use_BGR2RGB=False,
-        pre_donwload=100,
+        pre_donwload=20,
         epochs_discriminator=1, epochs_generator=1,
         ):
         """
-
+        Start training of the SimpleGAN with pipeline.
+        TODO: Write full docs.
         Parameters
         ----------
+        iterations : int
+        restore_image_function : python function
+            Example: `def restore_image_function(img, sess): ... `.
+        final_image_size : list
+            Example: [32, 32, 3].
+        optimizer_discriminator : tf.optimizer
+        optimizer_generator : tf.optimizer
+        test_period : int
+        epochs : int
+        global_step_gen : tf.Variable
+        global_step_disc : tf.Variable
+        test_period_disc : int
+        show_images : bool
+        label_smoothing : float
+        use_BGR2RGB : bool
+        pre_donwload : int
+        epochs_generator : int
+        epochs_discriminator : int
 
         Returns
         -------
@@ -134,6 +176,8 @@ class SimpleGAN:
 
                 for j in iterator:
                     # specific input for generator
+                    # this implementation very slow down training, example below more faster
+                    # TODO: Delete this code if second type is satisfies for us
                     """
                     if self._gen_in_input is not None:
                         # if we separate this, generator will provide different images
@@ -143,6 +187,8 @@ class SimpleGAN:
                     else:
                         image_batch = self._session.run(self._gen_in_target.get_data_tensor())
                     """
+                    # second type of the pipeline usage, which more faster
+                    # if we preload more than 1 batch
                     if current_batch_preload == pre_donwload or len(image_batch_preload) == 0:
                         current_batch_preload = 0
                         x_gen_batch_preload = []
@@ -170,9 +216,9 @@ class SimpleGAN:
 
                     generated_images = self._generator.generate(x=x_gen_batch)
 
-                    X_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
+                    x_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
                     # Train discriminator
-                    info_discriminator = self._discriminator.fit_ce(Xtrain=X_discriminator,
+                    info_discriminator = self._discriminator.fit_ce(Xtrain=x_discriminator,
                                                                     Ytrain=y_discriminator,
                                                                     optimizer=optimizer_discriminator,
                                                                     epochs=epochs_discriminator,
@@ -186,7 +232,7 @@ class SimpleGAN:
 
                     # Train generator
                     # if user use l1 or l2 loss
-                    if self._generator_discriminator._use_l1 is not None:
+                    if self._generator_discriminator.is_use_l1() is not None:
                         Xreal = image_batch
                     else:
                         Xreal = None
@@ -202,6 +248,7 @@ class SimpleGAN:
                 iterator.close()
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
+                    # TODO: Write additional tools for printing stuff
                     print('Test....')
                     if test_period_disc != -1:
                         avg_accuracy = sum(discriminator_accuracy) / len(discriminator_accuracy)
@@ -215,7 +262,10 @@ class SimpleGAN:
                     if final_image_size is not None:
                         generated_images = generated_images.reshape(generated_images.shape[0], *final_image_size)
                     
-                    generated_images = np.clip(restore_image_function(generated_images, self._session), 0.0, 255.0).astype(np.uint8)
+                    generated_images = np.clip(restore_image_function(generated_images, self._session),
+                                               0.0,
+                                               255.0
+                    ).astype(np.uint8)
                     
                     plt.figure(figsize=(20, 20))
                     
@@ -241,7 +291,6 @@ class SimpleGAN:
             if iterator is not None:
                 iterator.close()
 
-
     def fit_ce(
         self, Xtrain, restore_image_function,
         Xgen=None,
@@ -251,22 +300,33 @@ class SimpleGAN:
         epochs=1, test_period_disc=1,
         global_step_disc=None, global_step_gen=None,
         show_images=False,
+        use_BGR2RGB=False,
         label_smoothing=0.9,
         epochs_discriminator=1, epochs_generator=1,
         ):
         """
-
+        Start training of the SimpleGAN.
+        TODO: Write full docs.
         Parameters
         ----------
-        Xtrain : numpy array
-            Training images stacked into one big array with shape (num_images, image_w, image_h, image_depth).
-        optimizer : tensorflow optimizer
-            Model uses tensorflow optimizers in order train itself.
-        epochs : int
-            Number of epochs.
+        Xtrain : list or np.ndarray
+        Xgen : list or np.ndarray
+        restore_image_function : python function
+            Example: `def restore_image_function(img, sess): ... `.
+        final_image_size : list
+            Example: [32, 32, 3].
+        optimizer_discriminator : tf.optimizer
+        optimizer_generator : tf.optimizer
         test_period : int
-            Test begins each `test_period` epochs. You can set a larger number in order to
-            speed up training.
+        epochs : int
+        global_step_gen : tf.Variable
+        global_step_disc : tf.Variable
+        test_period_disc : int
+        show_images : bool
+        label_smoothing : float
+        use_BGR2RGB : bool
+        epochs_generator : int
+        epochs_discriminator : int
 
         Returns
         -------
@@ -274,7 +334,6 @@ class SimpleGAN:
                 Dictionary with all testing data(train error, train cost, test error, test cost)
                 for each test period.
         """
-
         assert (optimizer_discriminator is not None)
         assert (optimizer_generator is not None)
         assert (self._session is not None)
@@ -312,9 +371,9 @@ class SimpleGAN:
 
                     generated_images = self._generator.generate(x=x_gen_batch)
 
-                    X_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
+                    x_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
                     # Train discriminator
-                    info_discriminator = self._discriminator.fit_ce(Xtrain=X_discriminator, Ytrain=y_discriminator,
+                    info_discriminator = self._discriminator.fit_ce(Xtrain=x_discriminator, Ytrain=y_discriminator,
                                                                     optimizer=optimizer_discriminator,
                                                                     epochs=epochs_discriminator,
                                                                     test_period=test_period_disc,
@@ -327,7 +386,7 @@ class SimpleGAN:
 
                     # Train generator
                     # if user use l1 or l2 loss
-                    if self._generator_discriminator._use_l1 is not None:
+                    if self._generator_discriminator.is_use_l1() is not None:
                         Xreal = image_batch
                     else:
                         Xreal = None
@@ -343,6 +402,7 @@ class SimpleGAN:
                 iterator.close()
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
+                    # TODO: Write additional tools for printing stuff
                     print('Test....')
                     if test_period_disc != -1:
                         avg_accuracy = sum(discriminator_accuracy) / len(discriminator_accuracy)
@@ -360,13 +420,19 @@ class SimpleGAN:
                     if final_image_size is not None:
                         generated_images = generated_images.reshape(generated_images.shape[0], *final_image_size)
                     
-                    generated_images = np.clip(restore_image_function(generated_images, self._session), 0.0, 255.0).astype(np.uint8)
+                    generated_images = np.clip(restore_image_function(generated_images, self._session),
+                                               0.0,
+                                               255.0
+                    ).astype(np.uint8)
                     
                     plt.figure(figsize=(20, 20))
                     
                     for z in range(min(batch_size, 100)):
                         plt.subplot(10, 10, z+1)
-                        plt.imshow(generated_images[z])
+                        if use_BGR2RGB:
+                            plt.imshow(cv2.cvtColor(generated_images[z], cv2.COLOR_BGR2RGB))
+                        else:
+                            plt.imshow(generated_images[z])
                         plt.axis('off')
 
                     plt.tight_layout()
