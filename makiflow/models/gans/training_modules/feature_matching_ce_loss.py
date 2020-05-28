@@ -98,15 +98,13 @@ class FeatureBinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
                                                                                   logits=self._logits,
                                                                                   name='generator_loss')
             self._feature_matching_loss = tf.reduce_mean(self._feature_matching_loss)
-            print('start test')
             feature_loss = tf.reduce_mean(
                 tf.square(
                     tf.reduce_mean(self._feature_output_fake, axis=0) - \
                     tf.reduce_mean(self._feature_output_real, axis=0)
                 )
-            )
-            feature_loss = tf.multiply(feature_loss,  self._feature_scale)
-            self._feature_matching_loss = tf.add(self._feature_matching_loss, feature_loss)
+            ) * self._feature_scale
+            self._feature_matching_loss += feature_loss
 
         # additional loss l1/l2
         if self._use_l1 is not None:
