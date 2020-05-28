@@ -127,7 +127,7 @@ class GANsBasic(MakiCore):
 
         training_outputs = create_tensor(output)
         if name_layer_return is not None:
-            return training_outputs[name_layer_return]
+            return output_tensors[name_layer_return]
 
         return training_outputs
 
