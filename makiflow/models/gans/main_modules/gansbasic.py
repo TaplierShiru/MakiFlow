@@ -43,7 +43,11 @@ class GANsBasic(MakiCore):
         self._training_vars_are_ready = False
         self._binary_ce_loss_is_built = False
 
+        self._feature_matching_loss_is_built = False
         self._feature_loss = False
+        self._feature_scale = 1.0
+        self._use_feature_loss_only = False
+
         self._wasserstein_is_built = False
         
         self._use_l1 = None
