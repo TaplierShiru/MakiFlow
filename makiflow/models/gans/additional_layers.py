@@ -25,7 +25,6 @@ from makiflow.base import BatchNormBaseLayer
 from makiflow.layers.utils import InitConvKernel, InitDenseMat
 
 
-
 def spectral_normed_weight(w, name,
     u, 
     num_iters=1, # For Power iteration method, usually num_iters = 1 will be enough
@@ -63,9 +62,9 @@ def spectral_normed_weight(w, name,
     else:
         return w_bar
 
+
 def _l2normalize(v, name, eps=1e-12):
     return v / (tf.reduce_sum(v ** 2) ** 0.5 + eps)
-
 
 
 class ConvLayerSpectral(SimpleForwardLayer):
@@ -167,19 +166,19 @@ class ConvLayerSpectral(SimpleForwardLayer):
     def build(params: dict):
         name = params[MakiRestorable.NAME]
 
-        kw = params[ConvLayer.SHAPE][0]
-        kh = params[ConvLayer.SHAPE][1]
-        in_f = params[ConvLayer.SHAPE][2]
-        out_f = params[ConvLayer.SHAPE][3]
+        kw = params[ConvLayerSpectral.SHAPE][0]
+        kh = params[ConvLayerSpectral.SHAPE][1]
+        in_f = params[ConvLayerSpectral.SHAPE][2]
+        out_f = params[ConvLayerSpectral.SHAPE][3]
 
-        stride = params[ConvLayer.STRIDE]
-        padding = params[ConvLayer.PADDING]
-        activation = ActivationConverter.str_to_activation(params[ConvLayer.ACTIVATION])
+        stride = params[ConvLayerSpectral.STRIDE]
+        padding = params[ConvLayerSpectral.PADDING]
+        activation = ActivationConverter.str_to_activation(params[ConvLayerSpectral.ACTIVATION])
 
-        init_type = params[ConvLayer.INIT_TYPE]
-        use_bias = params[ConvLayer.USE_BIAS]
+        init_type = params[ConvLayerSpectral.INIT_TYPE]
+        use_bias = params[ConvLayerSpectral.USE_BIAS]
 
-        return ConvLayer(
+        return ConvLayerSpectral(
             kw=kw, kh=kh, in_f=in_f, out_f=out_f,
             stride=stride, name=name, padding=padding, activation=activation,
             kernel_initializer=init_type, use_bias=use_bias
@@ -187,18 +186,19 @@ class ConvLayerSpectral(SimpleForwardLayer):
 
     def to_dict(self):
         return {
-            MakiRestorable.FIELD_TYPE: ConvLayer.TYPE,
+            MakiRestorable.FIELD_TYPE: ConvLayerSpectral.TYPE,
             MakiRestorable.PARAMS: {
                 MakiRestorable.NAME: self._name,
-                ConvLayer.SHAPE: list(self.shape),
-                ConvLayer.STRI: self.stride,
-                ConvLayer.PADDING: self.padding,
-                ConvLayer.ACTIVATION: ActivationConverter.activation_to_str(self.f),
-                ConvLayer.USE_BIAS: self.use_bias,
-                ConvLayer.INIT_TYPE: self.init_type
+                ConvLayerSpectral.SHAPE: list(self.shape),
+                ConvLayerSpectral.STRI: self.stride,
+                ConvLayerSpectral.PADDING: self.padding,
+                ConvLayerSpectral.ACTIVATION: ActivationConverter.activation_to_str(self.f),
+                ConvLayerSpectral.USE_BIAS: self.use_bias,
+                ConvLayerSpectral.INIT_TYPE: self.init_type
             }
 
         }
+
 
 class UpConvLayerSpectral(SimpleForwardLayer):
     TYPE = 'UpConvLayer'
@@ -310,19 +310,19 @@ class UpConvLayerSpectral(SimpleForwardLayer):
     def build(params: dict):
         name = params[MakiRestorable.NAME]
 
-        kw = params[UpConvLayer.SHAPE][0]
-        kh = params[UpConvLayer.SHAPE][1]
-        in_f = params[UpConvLayer.SHAPE][3]
-        out_f = params[UpConvLayer.SHAPE][2]
+        kw = params[UpConvLayerSpectral.SHAPE][0]
+        kh = params[UpConvLayerSpectral.SHAPE][1]
+        in_f = params[UpConvLayerSpectral.SHAPE][3]
+        out_f = params[UpConvLayerSpectral.SHAPE][2]
 
-        padding = params[UpConvLayer.PADDING]
-        size = params[UpConvLayer.SIZE]
+        padding = params[UpConvLayerSpectral.PADDING]
+        size = params[UpConvLayerSpectral.SIZE]
 
-        activation = ActivationConverter.str_to_activation(params[UpConvLayer.ACTIVATION])
+        activation = ActivationConverter.str_to_activation(params[UpConvLayerSpectral.ACTIVATION])
 
-        init_type = params[UpConvLayer.INIT_TYPE]
-        use_bias = params[UpConvLayer.USE_BIAS]
-        return UpConvLayer(
+        init_type = params[UpConvLayerSpectral.INIT_TYPE]
+        use_bias = params[UpConvLayerSpectral.USE_BIAS]
+        return UpConvLayerSpectral(
             kw=kw, kh=kh, in_f=in_f, out_f=out_f, size=size,
             name=name, padding=padding, activation=activation,
             kernel_initializer=init_type, use_bias=use_bias
@@ -330,15 +330,15 @@ class UpConvLayerSpectral(SimpleForwardLayer):
 
     def to_dict(self):
         return {
-            MakiRestorable.FIELD_TYPE: UpConvLayer.TYPE,
+            MakiRestorable.FIELD_TYPE: UpConvLayerSpectral.TYPE,
             MakiRestorable.PARAMS: {
                 MakiRestorable.NAME: self._name,
-                UpConvLayer.SHAPE: list(self.shape),
-                UpConvLayer.SIZE: self.size,
-                UpConvLayer.PADDING: self.padding,
-                UpConvLayer.ACTIVATION: ActivationConverter.activation_to_str(self.f),
-                UpConvLayer.USE_BIAS: self.use_bias,
-                UpConvLayer.INIT_TYPE: self.init_type
+                UpConvLayerSpectral.SHAPE: list(self.shape),
+                UpConvLayerSpectral.SIZE: self.size,
+                UpConvLayerSpectral.PADDING: self.padding,
+                UpConvLayerSpectral.ACTIVATION: ActivationConverter.activation_to_str(self.f),
+                UpConvLayerSpectral.USE_BIAS: self.use_bias,
+                UpConvLayerSpectral.INIT_TYPE: self.init_type
             }
         }
 
@@ -429,15 +429,15 @@ class DenseLayerSpectral(SimpleForwardLayer):
     @staticmethod
     def build(params: dict):
         name = params[MakiRestorable.NAME]
-        input_shape = params[DenseLayer.INPUT_SHAPE]
-        output_shape = params[DenseLayer.OUTPUT_SHAPE]
+        input_shape = params[DenseLayerSpectral.INPUT_SHAPE]
+        output_shape = params[DenseLayerSpectral.OUTPUT_SHAPE]
 
-        activation = ActivationConverter.str_to_activation(params[DenseLayer.ACTIVATION])
+        activation = ActivationConverter.str_to_activation(params[DenseLayerSpectral.ACTIVATION])
 
-        init_type = params[DenseLayer.INIT_TYPE]
-        use_bias = params[DenseLayer.USE_BIAS]
+        init_type = params[DenseLayerSpectral.INIT_TYPE]
+        use_bias = params[DenseLayerSpectral.USE_BIAS]
 
-        return DenseLayer(
+        return DenseLayerSpectral(
             in_d=input_shape, out_d=output_shape,
             activation=activation, name=name,
             mat_initializer=init_type, use_bias=use_bias
@@ -445,13 +445,13 @@ class DenseLayerSpectral(SimpleForwardLayer):
 
     def to_dict(self):
         return {
-            MakiRestorable.FIELD_TYPE: DenseLayer.TYPE,
+            MakiRestorable.FIELD_TYPE: DenseLayerSpectral.TYPE,
             MakiRestorable.PARAMS: {
                 MakiRestorable.NAME: self._name,
-                DenseLayer.INPUT_SHAPE: self.input_shape,
-                DenseLayer.OUTPUT_SHAPE: self.output_shape,
-                DenseLayer.ACTIVATION: ActivationConverter.activation_to_str(self.f),
-                DenseLayer.USE_BIAS: self.use_bias,
-                DenseLayer.INIT_TYPE: self.init_type
+                DenseLayerSpectral.INPUT_SHAPE: self.input_shape,
+                DenseLayerSpectral.OUTPUT_SHAPE: self.output_shape,
+                DenseLayerSpectral.ACTIVATION: ActivationConverter.activation_to_str(self.f),
+                DenseLayerSpectral.USE_BIAS: self.use_bias,
+                DenseLayerSpectral.INIT_TYPE: self.init_type
             }
         }

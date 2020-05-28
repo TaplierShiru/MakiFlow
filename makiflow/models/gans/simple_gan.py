@@ -114,7 +114,7 @@ class SimpleGAN:
         show_images=False,
         label_smoothing=0.9,
         use_BGR2RGB=False,
-        pre_donwload=20,
+        pre_download=20,
         epochs_discriminator=1, epochs_generator=1,
         ):
         """
@@ -139,7 +139,7 @@ class SimpleGAN:
         show_images : bool
         label_smoothing : float
         use_BGR2RGB : bool
-        pre_donwload : int
+        pre_download : int
         epochs_generator : int
         epochs_discriminator : int
 
@@ -158,7 +158,7 @@ class SimpleGAN:
         batch_size = self._generator_discriminator.get_input_shape()[0]
 
         discriminator_accuracy = []
-        iterations = int(iterations / pre_donwload) * pre_donwload
+        iterations = int(iterations / pre_download) * pre_download
         y_discriminator = np.zeros((2 * batch_size, *self._discriminator.get_logits_shape()[1:])).astype(np.float32)
         y_discriminator[:batch_size, ...] = label_smoothing
 
@@ -191,16 +191,18 @@ class SimpleGAN:
                     """
                     # second type of the pipeline usage, which more faster
                     # if we preload more than 1 batch
-                    if current_batch_preload == pre_donwload or len(image_batch_preload) == 0:
+                    if current_batch_preload == pre_download or len(image_batch_preload) == 0:
                         current_batch_preload = 0
                         x_gen_batch_preload = []
                         image_batch_preload = []
 
-                        for _ in range(pre_donwload):
+                        for _ in range(pre_download):
                             if self._gen_in_input is not None:
                                 # if we separate this, generator will provide different images
-                                x_gen_batch_single, image_batch_single = self._session.run([self._gen_in_input.get_data_tensor(),
-                                                                              self._gen_in_target.get_data_tensor()]
+                                x_gen_batch_single, image_batch_single = self._session.run([
+                                                                                            self._gen_in_input.get_data_tensor(),
+                                                                                            self._gen_in_target.get_data_tensor()
+                                                                                            ]
                                 )
                                 x_gen_batch_preload.append(x_gen_batch_single)
                             else:
@@ -248,6 +250,7 @@ class SimpleGAN:
 
                 # close tqdm iterator for out safe
                 iterator.close()
+
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
                     # TODO: Write additional tools for printing stuff
