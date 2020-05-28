@@ -36,7 +36,7 @@ class Discriminator(BinaryCETrainingModuleDiscriminator):
     pass
 
 
-class GeneratorDiscriminator(BinaryCETrainingModuleGenerator, GeneratorDiscriminatorBasic):
+class GeneratorDiscriminator(BinaryCETrainingModuleGenerator):
     pass
 
 
@@ -134,6 +134,8 @@ class SimpleGAN:
         global_step_gen : tf.Variable
         global_step_disc : tf.Variable
         test_period_disc : int
+            Prints period of accuracy of the discriminator. Set it to -1, to speed up training,
+            otherwise it can slows down the training.
         show_images : bool
         label_smoothing : float
         use_BGR2RGB : bool
@@ -322,6 +324,8 @@ class SimpleGAN:
         global_step_gen : tf.Variable
         global_step_disc : tf.Variable
         test_period_disc : int
+            Prints period of accuracy of the discriminator. Set it to -1, to speed up training,
+            otherwise it can slows down the training.
         show_images : bool
         label_smoothing : float
         use_BGR2RGB : bool
@@ -372,6 +376,7 @@ class SimpleGAN:
                     generated_images = self._generator.generate(x=x_gen_batch)
 
                     x_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
+
                     # Train discriminator
                     info_discriminator = self._discriminator.fit_ce(Xtrain=x_discriminator, Ytrain=y_discriminator,
                                                                     optimizer=optimizer_discriminator,
@@ -379,6 +384,7 @@ class SimpleGAN:
                                                                     test_period=test_period_disc,
                                                                     global_step=global_step_disc
                     )
+
                     if test_period_disc != -1:
                         discriminator_accuracy += info_discriminator[BinaryCETrainingModuleDiscriminator.TRAIN_ACCURACY]
                     disc_cost = info_discriminator[BinaryCETrainingModuleDiscriminator.TRAIN_COSTS]
@@ -400,6 +406,7 @@ class SimpleGAN:
 
                 # close tqdm iterator for out safe
                 iterator.close()
+
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
                     # TODO: Write additional tools for printing stuff
@@ -419,14 +426,14 @@ class SimpleGAN:
 
                     if final_image_size is not None:
                         generated_images = generated_images.reshape(generated_images.shape[0], *final_image_size)
-                    
+
+                    # Give session of there is some special normalization via the TensorFlow
                     generated_images = np.clip(restore_image_function(generated_images, self._session),
                                                0.0,
                                                255.0
                     ).astype(np.uint8)
                     
                     plt.figure(figsize=(20, 20))
-                    
                     for z in range(min(batch_size, 100)):
                         plt.subplot(10, 10, z+1)
                         if use_BGR2RGB:

@@ -15,21 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
-from ..main_modules import GANsBasic
+from ..main_modules import GeneratorDiscriminatorBasic
 
 import tensorflow as tf
-from makiflow.models.common.utils import print_train_info, moving_average
 from makiflow.models.common.utils import new_optimizer_used, loss_is_built
 import numpy as np
-from sklearn.utils import shuffle
-from makiflow.models.classificator.utils import error_rate, sparse_cross_entropy
 from makiflow.base import MakiTensor
 
-from copy import copy
 
-
-class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
+class FeatureBinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
     TRAIN_COSTS = 'train costs'
+    GEN_LABEL = 'gen_label'
 
     def _prepare_training_vars(self):
         if not self._set_for_training:
@@ -44,31 +40,45 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
         self._labels = tf.constant(np.ones(self._logits.get_shape().as_list()),
                                    shape=self._logits.get_shape().as_list(),
                                    dtype=tf.float32,
-                                   name='gen_label'
-                                   )
+                                   name=FeatureBinaryCETrainingModuleGenerator.GEN_LABEL
+         )
 
         # prepare inputs and outputs for l1 or l2 if it need
         if self._use_l1 is not None:
             # create output tensor from generator (in train set up)
-            self._gen_product = self._return_training_graph_from_certain_output(self._generator._outputs[0])
+            self._gen_product = self._return_training_graph_from_certain_output(self._generator.get_outputs_maki_tensors[0])
 
         self._training_vars_are_ready = True
 
     def add_feature_matching(self, layer_tensor_feature_disc: MakiTensor,
                              use_feature_loss_only=False,
                              feature_scale=1.0):
+        """
+        Added layers for feature matching in the loss creation.
+        In this model, this function is important before training.
+
+        Parameters
+        ----------
+        layer_tensor_feature_disc : MakiTensor
+            MakiTensor from which will be taken output for feature matching loss.
+        use_feature_loss_only : bool
+            If true, only feature loss will be used, otherwise also will be added binary ce loss.
+        feature_scale : float
+            Scale of the feature loss, by default equal to 1.0.
+        """
         # `layer_name_disc` will be used in the L2 loss for feature matching
         if not self._set_for_training:
             self._setup_for_training()
 
         if not self._training_vars_are_ready:
             self._prepare_training_vars()
+
         self._feature_output_fake = super()._return_training_graph_from_certain_output(
             name_layer_return=layer_tensor_feature_disc.get_name(),
             output=self._outputs[0],
         )
         self._feature_output_real, self._feature_input_real = (layer_tensor_feature_disc.get_data_tensor(),
-                                                               self._discriminator._inputs[0].get_data_tensor())
+                                                               self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor())
 
         self._feature_loss = True
         self._feature_scale = feature_scale
@@ -107,7 +117,7 @@ class FeatureBinaryCETrainingModuleGenerator(GANsBasic):
                 additional_loss = tf.reduce_mean(
                     tf.square(self._gen_product - self._feature_input_real)
                 ) * 0.5 * self._lambda
-            # add aditional loss to final loss
+            # add additional loss to final loss
             self._feature_matching_loss += additional_loss
 
         self._final_feature_matching_loss = self._build_final_loss(self._feature_matching_loss)
