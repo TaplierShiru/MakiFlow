@@ -369,10 +369,10 @@ class SimpleGAN:
                 iterator = tqdm(range(n_batches))
 
                 for j in iterator:
-                    image_batch = Xtrain[j * batch_size : batch_size * (j + 1)]
+                    image_batch = Xtrain[j * batch_size: batch_size * (j + 1)]
                     # specific input for generator
                     if Xgen is not None:
-                        x_gen_batch = Xgen[j * batch_size : batch_size * (j + 1)]
+                        x_gen_batch = Xgen[j * batch_size: batch_size * (j + 1)]
                     else:
                         x_gen_batch = None
 

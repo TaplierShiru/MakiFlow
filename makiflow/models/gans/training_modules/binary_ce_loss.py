@@ -84,7 +84,6 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
                 self._final_binary_ce_loss, var_list=self._trainable_vars, global_step=global_step
             )
             self._session.run(tf.variables_initializer(optimizer.variables()))
-            self._binary_ce_loss_is_built = True
             loss_is_built()
 
         if self._binary_ce_optimizer != optimizer:

@@ -370,10 +370,10 @@ class FeatureSimpleGAN:
 
                     generated_images = self._generator.generate(x=x_gen_batch)
 
-                    X_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
+                    x_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
 
                     # Train discriminator
-                    info_discriminator = self._discriminator.fit_ce(Xtrain=X_discriminator, Ytrain=y_discriminator,
+                    info_discriminator = self._discriminator.fit_ce(Xtrain=x_discriminator, Ytrain=y_discriminator,
                                                                     optimizer=optimizer_discriminator,
                                                                     epochs=epochs_discriminator,
                                                                     test_period=test_period_disc,
@@ -390,8 +390,7 @@ class FeatureSimpleGAN:
                                                                             epochs=epochs_generator,
                                                                             optimizer=optimizer_generator,
                                                                             global_step=global_step_gen
-                                                                            )[
-                        FeatureBinaryCETrainingModuleGenerator.TRAIN_COSTS]
+                    )[FeatureBinaryCETrainingModuleGenerator.TRAIN_COSTS]
                     generator_cost = moving_average(generator_cost, sum(gen_cost) / len(gen_cost), j)
 
                 # close tqdm iterator for out safe

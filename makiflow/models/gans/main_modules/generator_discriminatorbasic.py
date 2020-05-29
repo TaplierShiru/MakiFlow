@@ -48,6 +48,13 @@ class GeneratorDiscriminatorBasic(GANsBasic):
         self._use_perceptual_loss = False
         self._creation_per_loss = None
 
+        self._feature_loss_is_set = False
+        self._layer_tensor_feature_disc = None
+        self._feature_scale = 1.0
+        self._ce_scale = 1.0
+        self._use_feature_loss_only = False
+
+
     def _connect_generator_disc_graph(self, output_generator, input_discriminator, output_discriminator):
         """
         Connect two graph in one, which is used for training
