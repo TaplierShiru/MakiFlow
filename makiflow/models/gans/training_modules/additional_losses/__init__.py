@@ -15,12 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
+from .compile import BasicTrainingModule
 
-from .binary_ce_loss import BinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
-
-from .feature_matching_ce_loss import FeatureBinaryCETrainingModuleGenerator
-
-from makiflow.models.gans.training_modules.additional_losses.perceptual_loss import PerceptualLossModuleGenerator
-from .additional_losses import BasicTrainingModule
-
-from .wasserstein_loss import WassersteinTrainingModuleGenerator, WassersteinTrainingModuleDiscriminator

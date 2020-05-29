@@ -16,7 +16,8 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from ..main_modules import GANsBasic, GeneratorDiscriminatorBasic
+from ..main_modules import GANsBasic
+from .additional_losses import BasicTrainingModule
 
 import tensorflow as tf
 from makiflow.models.common.utils import moving_average
@@ -27,7 +28,7 @@ from makiflow.models.classificator.utils import error_rate
 EPSILON = np.float32(1e-32)
 
 
-class BinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
+class BinaryCETrainingModuleGenerator(BasicTrainingModule):
 
     TRAIN_COSTS = 'train costs'
     GEN_LABEL = 'gen_label'
@@ -36,6 +37,8 @@ class BinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
         if not self._set_for_training:
             super()._setup_for_training()
         # VARIABLES PREPARATION
+        self._binary_ce_loss_is_built = False
+
         self._logits = self._training_outputs[0]
         self._num_classes = self._logits.get_shape()[-1]
 
@@ -47,28 +50,21 @@ class BinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
                                    dtype=tf.float32,
                                    name=BinaryCETrainingModuleGenerator.GEN_LABEL
         )
-        # prepare inputs and outputs for l1 or l2 if it need
-        if self._use_l1 is not None:
-            self._input_real_image = tf.placeholder(dtype=np.float32, shape=self._discriminator.get_input_shape())
-            # create output tensor from generator (in train set up)
-            self._gen_product = self._return_training_graph_from_certain_output(self._generator.get_outputs_maki_tensors()[0])
+
+        super()._prepare_training_vars()
 
         self._training_vars_are_ready = True
 
+
     def _build_binary_ce_loss(self):
         #self._binary_ce_loss = self._labels * tf.log(1 - self._logits + EPSILON)
-        self._binary_ce_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels, logits=self._logits, name='generator_loss')
-        self._binary_ce_loss = tf.reduce_mean(self._binary_ce_loss)
+        self._binary_ce_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels,
+                                                                       logits=self._logits,
+                                                                       name='generator_loss'
+        )
 
-        if self._use_l1 is not None:
-            if self._use_l1:
-                # build l1
-                additional_loss = tf.reduce_mean(tf.abs(self._gen_product - self._input_real_image)) * self._lambda
-            else:
-                # build l2
-                additional_loss = tf.reduce_mean(tf.square(self._gen_product - self._input_real_image)) * 0.5 * self._lambda
-            # add aditional loss to final loss
-            self._binary_ce_loss += additional_loss
+        self._binary_ce_loss = tf.reduce_mean(self._binary_ce_loss)
+        self._binary_ce_loss = self._build_additional_losses(self._binary_ce_loss)
         self._final_binary_ce_loss = self._build_final_loss(self._binary_ce_loss)
 
         self._binary_ce_loss_is_built = True
@@ -148,7 +144,7 @@ class BinaryCETrainingModuleGenerator(GeneratorDiscriminatorBasic):
                 else:
                     generated = self._generator.get_noise()
 
-                if self._use_l1 is None:
+                if not(self.is_use_l1() or self.is_use_perceptual_loss()):
                     train_cost_batch, _ = self._session.run(
                         [self._final_binary_ce_loss, train_op],
                         feed_dict={self._images: generated}

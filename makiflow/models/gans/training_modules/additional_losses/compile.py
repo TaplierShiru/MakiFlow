@@ -16,11 +16,25 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .binary_ce_loss import BinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
+from .l1_or_l2_loss import L1orL2LossModuleGenerator
+from .perceptual_loss import PerceptualLossModuleGenerator
 
-from .feature_matching_ce_loss import FeatureBinaryCETrainingModuleGenerator
+import tensorflow as tf
+from makiflow.models.common.utils import new_optimizer_used, loss_is_built
+import numpy as np
 
-from makiflow.models.gans.training_modules.additional_losses.perceptual_loss import PerceptualLossModuleGenerator
-from .additional_losses import BasicTrainingModule
+EPSILON = np.float32(1e-32)
 
-from .wasserstein_loss import WassersteinTrainingModuleGenerator, WassersteinTrainingModuleDiscriminator
+
+class BasicTrainingModule(L1orL2LossModuleGenerator,
+                          PerceptualLossModuleGenerator):
+
+    def _build_additional_losses(self, total_loss):
+        if self.is_use_l1():
+            total_loss += self._build_l1_or_l2_loss()
+
+        if self.is_use_perceptual_loss():
+            total_loss += self._build_perceptual_loss()
+
+        return total_loss
+
