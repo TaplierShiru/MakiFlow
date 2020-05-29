@@ -83,7 +83,7 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
             name_layer_return=layer_tensor_feature_disc.get_name(),
             output=self._outputs[0],
         )
-        self._feature_output_real, self._input_real_images = (layer_tensor_feature_disc.get_data_tensor(),
+        self._feature_output_real, self._input_real_image = (layer_tensor_feature_disc.get_data_tensor(),
                                                                self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor())
 
         self._feature_loss = True
@@ -200,7 +200,7 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
 
                 train_cost_batch, _ = self._session.run(
                     [self._final_feature_matching_loss, train_op],
-                    feed_dict={self._images: generated, self._input_real_images: Xreal}
+                    feed_dict={self._images: generated, self._input_real_image: Xreal}
                 )
 
                 train_costs.append(train_cost_batch)
