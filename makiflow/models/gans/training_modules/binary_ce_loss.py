@@ -16,7 +16,7 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from ..main_modules import GANsBasic
+from ..main_modules import GANsBasic, DiscriminatorBasic
 from .additional_losses import BasicTrainingModule
 
 import tensorflow as tf
@@ -165,7 +165,7 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
             return {BinaryCETrainingModuleGenerator.TRAIN_COSTS: train_costs}
 
 
-class BinaryCETrainingModuleDiscriminator(GANsBasic):
+class BinaryCETrainingModuleDiscriminator(DiscriminatorBasic):
 
     TRAIN_COSTS = 'train costs'
     TRAIN_ACCURACY = 'train accuracy'

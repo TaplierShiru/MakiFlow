@@ -17,5 +17,12 @@
 
 
 from .gansbasic import GANsBasic
-from .generator_discriminatorbasic import GeneratorDiscriminatorBasic
-from .discriminator_basic import DiscriminatorBasic
+
+
+class DiscriminatorBasic(GANsBasic):
+
+    def __init__(self, input_s, output, name):
+        super().__init__(input_s, output, name=name)
+
+        self._binary_ce_loss_is_built = False
+
