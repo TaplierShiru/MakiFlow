@@ -29,7 +29,7 @@ class BasicAdditionalLossModuleGenerator(GeneratorDiscriminatorBasic):
         # prepare inputs and outputs for l1 or l2 if it need
         if self.is_use_l1() or self.is_use_perceptual_loss():
             if self._input_real_image is None:
-                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0]
+                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
 
             if self._gen_product is None:
                 # create output tensor from generator (in train set up)
