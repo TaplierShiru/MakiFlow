@@ -26,7 +26,7 @@ from makiflow.models.common.utils import moving_average
 from .training_modules import FeatureBinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
 from .generator import Generator
 from .pipeline.input_gen_layer import InputGenLayer
-
+from .utils import visualise_sheets_of_images
 
 class Discriminator(BinaryCETrainingModuleDiscriminator):
     pass
@@ -37,6 +37,7 @@ class GeneratorDiscriminator(FeatureBinaryCETrainingModuleGenerator):
 
 
 class FeatureSimpleGAN:
+    FEATURE_SIMPLE_GAN = 'FeatureSimpleGAN'
 
     def __init__(self,
                  generator: Generator,
@@ -261,24 +262,14 @@ class FeatureSimpleGAN:
                     generated_images = np.clip(restore_image_function(generated_images, self._session),
                                                0.0,
                                                255.0
-                                               ).astype(np.uint8)
+                    ).astype(np.uint8)
 
-                    plt.figure(figsize=(20, 20))
-
-                    for z in range(min(batch_size, 100)):
-                        plt.subplot(10, 10, z + 1)
-                        if use_BGR2RGB:
-                            plt.imshow(cv2.cvtColor(generated_images[z], cv2.COLOR_BGR2RGB))
-                        else:
-                            plt.imshow(generated_images[z])
-                        plt.axis('off')
-
-                    plt.tight_layout()
-                    plt.savefig(f'generated_image_epoch_{i}.png')
-                    if show_images:
-                        plt.show()
-
-                    plt.close('all')
+                    visualise_sheets_of_images(generated_images,
+                                               prefix_name=FeatureSimpleGAN.FEATURE_SIMPLE_GAN,
+                                               unique_index=i,
+                                               show_images=show_images,
+                                               use_BGR2RGB=use_BGR2RGB
+                    )
 
         except Exception as ex:
             print(ex)
@@ -420,23 +411,14 @@ class FeatureSimpleGAN:
                     generated_images = np.clip(restore_image_function(generated_images, self._session),
                                                0.0,
                                                255.0
-                                               ).astype(np.uint8)
+                    ).astype(np.uint8)
 
-                    plt.figure(figsize=(20, 20))
-                    for z in range(min(batch_size, 100)):
-                        plt.subplot(10, 10, z + 1)
-                        if use_BGR2RGB:
-                            plt.imshow(cv2.cvtColor(generated_images[z], cv2.COLOR_BGR2RGB))
-                        else:
-                            plt.imshow(generated_images[z])
-                        plt.axis('off')
-
-                    plt.tight_layout()
-                    plt.savefig(f'generated_image_epoch_{i}.png')
-                    if show_images:
-                        plt.show()
-
-                    plt.close('all')
+                    visualise_sheets_of_images(generated_images,
+                                               prefix_name=FeatureSimpleGAN.FEATURE_SIMPLE_GAN,
+                                               unique_index=i,
+                                               show_images=show_images,
+                                               use_BGR2RGB=use_BGR2RGB
+                    )
 
         except Exception as ex:
             print(ex)

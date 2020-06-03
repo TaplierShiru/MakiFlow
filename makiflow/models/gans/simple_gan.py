@@ -24,11 +24,9 @@ import cv2
 
 from makiflow.models.common.utils import moving_average
 
-from .main_modules import GeneratorDiscriminatorBasic
+from .utils import visualise_sheets_of_images
 from .generator import Generator
-
 from .training_modules import BinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
-
 from .pipeline.input_gen_layer import InputGenLayer
 
 
@@ -41,6 +39,7 @@ class GeneratorDiscriminator(BinaryCETrainingModuleGenerator):
 
 
 class SimpleGAN:
+    SIMPLE_GAN = 'SimpleGAN'
 
     def __init__(self,
                  generator: Generator,
@@ -271,23 +270,13 @@ class SimpleGAN:
                                                0.0,
                                                255.0
                     ).astype(np.uint8)
-                    
-                    plt.figure(figsize=(20, 20))
-                    
-                    for z in range(min(batch_size, 100)):
-                        plt.subplot(10, 10, z+1)
-                        if use_BGR2RGB:
-                            plt.imshow(cv2.cvtColor(generated_images[z], cv2.COLOR_BGR2RGB))
-                        else:
-                            plt.imshow(generated_images[z])
-                        plt.axis('off')
 
-                    plt.tight_layout()
-                    plt.savefig(f'generated_image_epoch_{i}.png')
-                    if show_images:
-                        plt.show()
-
-                    plt.close('all')
+                    visualise_sheets_of_images(generated_images,
+                                               prefix_name=SimpleGAN.SIMPLE_GAN,
+                                               unique_index=i,
+                                               show_images=show_images,
+                                               use_BGR2RGB=use_BGR2RGB
+                    )
 
         except Exception as ex:
             print(ex)
@@ -436,21 +425,12 @@ class SimpleGAN:
                                                255.0
                     ).astype(np.uint8)
                     
-                    plt.figure(figsize=(20, 20))
-                    for z in range(min(batch_size, 100)):
-                        plt.subplot(10, 10, z+1)
-                        if use_BGR2RGB:
-                            plt.imshow(cv2.cvtColor(generated_images[z], cv2.COLOR_BGR2RGB))
-                        else:
-                            plt.imshow(generated_images[z])
-                        plt.axis('off')
-
-                    plt.tight_layout()
-                    plt.savefig(f'generated_image_epoch_{i}.png')
-                    if show_images:
-                        plt.show()
-
-                    plt.close('all')
+                    visualise_sheets_of_images(generated_images,
+                                               prefix_name=SimpleGAN.SIMPLE_GAN,
+                                               unique_index=i,
+                                               show_images=show_images,
+                                               use_BGR2RGB=use_BGR2RGB
+                    )
 
         except Exception as ex:
             print(ex)

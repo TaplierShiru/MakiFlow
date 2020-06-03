@@ -23,12 +23,9 @@ from sklearn.utils import shuffle
 import numpy as np
 
 from makiflow.models.common.utils import moving_average
-
 from .main_modules import GeneratorDiscriminatorBasic
-
 from .training_modules import WassersteinTrainingModuleGenerator, WassersteinTrainingModuleDiscriminator
-
-from makiflow.layers import ConvLayer, UpConvLayer, DenseLayer
+from .utils import visualise_sheets_of_images
 
 
 class Discriminator(WassersteinTrainingModuleDiscriminator):
@@ -53,7 +50,6 @@ class Discriminator(WassersteinTrainingModuleDiscriminator):
             params = list(maki_tensor.get_parent_layer().get_params_dict().values())
             for param in params:
                 self._clip_op += [param.assign(tf.clip_by_value(param, clip[0], clip[1]))]
-
 
 
 class GeneratorDiscriminator(WassersteinTrainingModuleGenerator, GeneratorDiscriminatorBasic):

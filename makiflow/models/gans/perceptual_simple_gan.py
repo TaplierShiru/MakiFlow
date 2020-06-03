@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
+# TODO: Delete this file and convinced of it
+
 import tensorflow as tf
 from tqdm import tqdm
 import matplotlib.pyplot as plt

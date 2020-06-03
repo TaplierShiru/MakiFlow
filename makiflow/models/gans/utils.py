@@ -16,6 +16,8 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import cv2
 
 COLORSPACE_RGB = 'RGB'
 COLORSPACE_LAB = 'LAB'
@@ -71,7 +73,8 @@ def rgb_to_lab(srgb):
         with tf.name_scope("srgb_to_xyz"):
             linear_mask = tf.cast(srgb_pixels <= 0.04045, dtype=tf.float32)
             exponential_mask = tf.cast(srgb_pixels > 0.04045, dtype=tf.float32)
-            rgb_pixels = (srgb_pixels / 12.92 * linear_mask) + (((srgb_pixels + 0.055) / 1.055) ** 2.4) * exponential_mask
+            rgb_pixels = (srgb_pixels / 12.92 * linear_mask) + (
+                        ((srgb_pixels + 0.055) / 1.055) ** 2.4) * exponential_mask
             rgb_to_xyz = tf.constant([
                 #    X        Y          Z
                 [0.412453, 0.212671, 0.019334],  # R
@@ -82,14 +85,14 @@ def rgb_to_lab(srgb):
 
         # https://en.wikipedia.org/wiki/Lab_color_space#CIELAB-CIEXYZ_conversions
         with tf.name_scope("xyz_to_cielab"):
-
             # normalize for D65 white point
             xyz_normalized_pixels = tf.multiply(xyz_pixels, [1 / 0.950456, 1.0, 1 / 1.088754])
 
             epsilon = 6 / 29
-            linear_mask = tf.cast(xyz_normalized_pixels <= (epsilon**3), dtype=tf.float32)
-            exponential_mask = tf.cast(xyz_normalized_pixels > (epsilon**3), dtype=tf.float32)
-            fxfyfz_pixels = (xyz_normalized_pixels / (3 * epsilon**2) + 4 / 29) * linear_mask + (xyz_normalized_pixels ** (1 / 3)) * exponential_mask
+            linear_mask = tf.cast(xyz_normalized_pixels <= (epsilon ** 3), dtype=tf.float32)
+            exponential_mask = tf.cast(xyz_normalized_pixels > (epsilon ** 3), dtype=tf.float32)
+            fxfyfz_pixels = (xyz_normalized_pixels / (3 * epsilon ** 2) + 4 / 29) * linear_mask + (
+                        xyz_normalized_pixels ** (1 / 3)) * exponential_mask
 
             # convert to lab
             fxfyfz_to_lab = tf.constant([
@@ -122,7 +125,8 @@ def lab_to_rgb(lab):
             epsilon = 6 / 29
             linear_mask = tf.cast(fxfyfz_pixels <= epsilon, dtype=tf.float32)
             exponential_mask = tf.cast(fxfyfz_pixels > epsilon, dtype=tf.float32)
-            xyz_pixels = (3 * epsilon**2 * (fxfyfz_pixels - 4 / 29)) * linear_mask + (fxfyfz_pixels ** 3) * exponential_mask
+            xyz_pixels = (3 * epsilon ** 2 * (fxfyfz_pixels - 4 / 29)) * linear_mask + (
+                        fxfyfz_pixels ** 3) * exponential_mask
 
             # denormalize for D65 white point
             xyz_pixels = tf.multiply(xyz_pixels, [0.950456, 1.0, 1.088754])
@@ -139,7 +143,8 @@ def lab_to_rgb(lab):
             rgb_pixels = tf.clip_by_value(rgb_pixels, 0.0, 1.0)
             linear_mask = tf.cast(rgb_pixels <= 0.0031308, dtype=tf.float32)
             exponential_mask = tf.cast(rgb_pixels > 0.0031308, dtype=tf.float32)
-            srgb_pixels = (rgb_pixels * 12.92 * linear_mask) + ((rgb_pixels ** (1 / 2.4) * 1.055) - 0.055) * exponential_mask
+            srgb_pixels = (rgb_pixels * 12.92 * linear_mask) + (
+                        (rgb_pixels ** (1 / 2.4) * 1.055) - 0.055) * exponential_mask
 
         return tf.reshape(srgb_pixels, tf.shape(lab))
 
@@ -148,3 +153,49 @@ def img_from_lab_to_rgb(img, sess):
     img = tf.constant(img, dtype=tf.float32)
     img = postprocess(img, COLORSPACE_LAB, COLORSPACE_RGB)
     return sess.run(img) * 255.0
+
+
+def visualise_sheets_of_images(images,
+                               prefix_name,
+                               unique_index,
+                               show_images=False,
+                               subplot_size=(10, 10),
+                               figsize=(20, 20),
+                               use_BGR2RGB=False,
+                               ):
+    """
+    Plot sheets of images. Usually used for generated images from GANs.
+
+    Parameters
+    ----------
+    images : list or np.ndarray
+        List of images that should be plotted.
+    prefix_name : str
+        Prefix name for file with sheets of images.
+    unique_index : int
+        Unique number for name of file which consist of sheets of images,
+        usually this params used for showing at which epoch this result is.
+    show_images : bool
+        If true, sheets of images will be plotted.
+    subplot_size : tuple
+        Size of raw and columns. For more detail, see plt docs.
+    figsize : tuple
+        Size of figure. For more detail, see plt docs.
+    use_BGR2RGB : bool
+        If true, `images` will be converted into RGB format (if they have BGR format).
+    """
+    plt.figure(figsize=figsize)
+    for z in range(min(len(images), subplot_size[0] * subplot_size[1])):
+        plt.subplot(*subplot_size, z + 1)
+        if use_BGR2RGB:
+            plt.imshow(cv2.cvtColor(images[z], cv2.COLOR_BGR2RGB))
+        else:
+            plt.imshow(images[z])
+        plt.axis('off')
+
+    plt.tight_layout()
+    plt.savefig(f'{prefix_name}_{unique_index}.png')
+    if show_images:
+        plt.show()
+
+    plt.close('all')

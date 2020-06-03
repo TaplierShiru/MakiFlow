@@ -21,6 +21,7 @@ import numpy as np
 
 # TODO: Add comments into model
 
+
 class Generator(GANsBasic):
 
     def __init__(self, input_s, output, name, use_noise_as_input=True):
