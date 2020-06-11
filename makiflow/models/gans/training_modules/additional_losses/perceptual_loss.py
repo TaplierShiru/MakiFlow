@@ -54,12 +54,13 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
             Scale of the perceptual loss.
         """
         if not self._perceptual_loss_vars_are_ready:
-            self._prepare_training_vars()
+            print('call prepare')
+            self._prepare_training_vars_perceptual()
         self._creation_per_loss = creation_per_loss
         self._scale_per_loss = scale_loss
         self._use_perceptual_loss = True
 
-    def _prepare_training_vars(self):
+    def _prepare_training_vars_perceptual(self):
         print('before')
         if not self._perceptual_loss_vars_are_ready:
             print('prepare was called')
