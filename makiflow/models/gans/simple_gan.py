@@ -25,8 +25,6 @@ from makiflow.models.common.utils import moving_average
 from .utils import visualise_sheets_of_images
 from .generator import Generator
 from .training_modules import BinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
-from .main_modules import GeneratorDiscriminatorBasic
-from .training_modules.additional_losses import BasicTrainingModule
 from .pipeline.input_gen_layer import InputGenLayer
 
 
@@ -35,16 +33,7 @@ class Discriminator(BinaryCETrainingModuleDiscriminator):
 
 
 class GeneratorDiscriminator(BinaryCETrainingModuleGenerator):
-
-    def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
-        # Init additional losses
-        BasicTrainingModule.__init__(self)
-        # Init graph
-        GeneratorDiscriminatorBasic.__init__(self,
-                                             generator=generator,
-                                             discriminator=discriminator,
-                                             name=name
-        )
+    pass
 
 
 class SimpleGAN:

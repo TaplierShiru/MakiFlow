@@ -23,7 +23,7 @@ from copy import copy
 
 class GeneratorDiscriminatorBasic(GANsBasic):
 
-    def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
+    def __init__(self, generator, discriminator, name):
         gen_in_x = generator.get_inputs_maki_tensors()[0]
         gen_output_x = generator.get_outputs_maki_tensors()[0]
 

@@ -58,7 +58,7 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
         scale : float
             Scale of the additional loss.
         """
-        if not self._training_vars_are_ready:
+        if not self._l1_or_l2_loss_vars_are_ready:
             self._prepare_training_vars()
         # if `use_l1` is false, when l2 will be used
         self._use_l1 = use_l1

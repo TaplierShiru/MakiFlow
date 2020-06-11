@@ -61,7 +61,7 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
         scale_loss : float
             Scale of the perceptual loss.
         """
-        if not self._training_vars_are_ready:
+        if not self._perceptual_loss_vars_are_ready:
             self._prepare_training_vars()
         self._creation_per_loss = creation_per_loss
         self._scale_per_loss = scale_loss

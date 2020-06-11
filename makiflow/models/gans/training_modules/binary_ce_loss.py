@@ -52,7 +52,6 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
                                    name=BinaryCETrainingModuleGenerator.GEN_LABEL
         )
 
-        super()._prepare_training_vars()
         self._training_vars_are_ready = True
 
     def _build_binary_ce_loss(self):

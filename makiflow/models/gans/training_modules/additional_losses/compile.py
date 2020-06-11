@@ -18,6 +18,7 @@
 
 from .l1_or_l2_loss import L1orL2LossModuleGenerator
 from .perceptual_loss import PerceptualLossModuleGenerator
+from makiflow.models.gans.main_modules import GeneratorDiscriminatorBasic
 
 
 class BasicTrainingModule(L1orL2LossModuleGenerator,
@@ -27,16 +28,13 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
 
     """
 
-    def __init__(self):
+    def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
+        GeneratorDiscriminatorBasic.__init__(self,
+                                             generator=generator,
+                                             discriminator=discriminator,
+                                             name=name)
         L1orL2LossModuleGenerator.__init__(self)
         PerceptualLossModuleGenerator.__init__(self)
-
-    def _prepare_training_vars(self):
-        if not self._set_for_training:
-            super()._setup_for_training()
-        # Call same method for all additional losses
-        L1orL2LossModuleGenerator._prepare_training_vars(self)
-        PerceptualLossModuleGenerator._prepare_training_vars(self)
 
     def _build_additional_losses(self, total_loss):
         if super().is_use_l1_or_l2_loss():
