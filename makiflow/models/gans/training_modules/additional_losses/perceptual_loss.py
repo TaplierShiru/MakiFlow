@@ -60,6 +60,7 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
         self._use_perceptual_loss = True
 
     def _prepare_training_vars(self):
+        print('before')
         if not self._perceptual_loss_vars_are_ready:
             print('prepare was called')
             self._scale_per_loss = 1.0
