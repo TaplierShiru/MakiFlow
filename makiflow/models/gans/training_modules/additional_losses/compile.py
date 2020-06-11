@@ -26,6 +26,14 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
     Connect additional losses
 
     """
+
+    def _prepare_training_vars(self):
+        if not self._set_for_training:
+            super()._setup_for_training()
+        # Call same method for all additional losses
+        L1orL2LossModuleGenerator._prepare_training_vars(self)
+        PerceptualLossModuleGenerator._prepare_training_vars(self)
+
     def _build_additional_losses(self, total_loss):
         if super().is_use_l1_or_l2_loss():
             total_loss += self._build_l1_or_l2_loss()

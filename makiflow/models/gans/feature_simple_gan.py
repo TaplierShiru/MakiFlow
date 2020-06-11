@@ -22,6 +22,7 @@ import numpy as np
 
 from makiflow.models.common.utils import moving_average
 from .training_modules import FeatureBinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
+from .main_modules import GeneratorDiscriminatorBasic
 from .generator import Generator
 from .pipeline.input_gen_layer import InputGenLayer
 from .utils import visualise_sheets_of_images
@@ -32,7 +33,12 @@ class Discriminator(BinaryCETrainingModuleDiscriminator):
 
 
 class GeneratorDiscriminator(FeatureBinaryCETrainingModuleGenerator):
-    pass
+
+    def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
+        GeneratorDiscriminatorBasic.__init__(generator=generator,
+                                             discriminator=discriminator,
+                                             name=name
+        )
 
 
 class FeatureSimpleGAN:

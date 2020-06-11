@@ -25,21 +25,26 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
 
     NOTIFY_BUILD_L1_SLASH_L2_LOSS = "L1/L2 loss was built"
 
+    def __init__(self):
+        self._l1_or_l2_loss_vars_are_ready = False
+
     def _prepare_training_vars(self):
-        if not self._set_for_training:
-            super()._setup_for_training()
-        self._use_l1 = False
-        self._use_l1_or_l2_loss = False
-        self._lambda = 1.0
-        self._l1_or_l2_loss_is_built = False
+        if not self._l1_or_l2_loss_vars_are_ready:
+            self._use_l1 = False
+            self._use_l1_or_l2_loss = False
+            self._lambda = 1.0
+            self._l1_or_l2_loss_is_built = False
+
+            self._l1_or_l2_loss_vars_are_ready = True
 
     def is_use_l1_or_l2_loss(self) -> bool:
         """
         Return bool variable which shows whether it is being used l1/l2 or not.
 
         """
-        if not self._training_vars_are_ready:
-            self._prepare_training_vars()
+        if not self._l1_or_l2_loss_vars_are_ready:
+            return self._l1_or_l2_loss_vars_are_ready
+
         return self._use_l1_or_l2_loss
 
     def add_l1_or_l2_loss(self, use_l1=True, scale=10.0):

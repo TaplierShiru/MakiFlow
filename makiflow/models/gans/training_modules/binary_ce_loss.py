@@ -16,7 +16,7 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from ..main_modules import GANsBasic, DiscriminatorBasic
+from ..main_modules import DiscriminatorBasic
 from .additional_losses import BasicTrainingModule
 
 import tensorflow as tf

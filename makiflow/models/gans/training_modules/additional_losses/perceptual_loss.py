@@ -23,21 +23,25 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
 
     NOTIFY_BUILD_PERCEPTUAL_LOSS = "Perceptual loss was built"
 
-    def _prepare_training_vars(self):
-        if not self._set_for_training:
-            super()._setup_for_training()
+    def __init__(self):
+        self._perceptual_loss_vars_are_ready = False
 
-        self._scale_per_loss = 1.0
-        self._use_perceptual_loss = False
-        self._creation_per_loss = None
-        self._perceptual_loss_is_built = False
+    def _prepare_training_vars(self):
+        if not self._perceptual_loss_vars_are_ready:
+            self._scale_per_loss = 1.0
+            self._use_perceptual_loss = False
+            self._creation_per_loss = None
+            self._perceptual_loss_is_built = False
+
+            self._perceptual_loss_vars_are_ready = True
 
     def is_use_perceptual_loss(self) -> bool:
         """
         Return bool variable which shows whether it is being used perceptual loss or not.
         """
-        if not self._training_vars_are_ready:
-            self._prepare_training_vars()
+        if not self._perceptual_loss_vars_are_ready:
+            return self._perceptual_loss_vars_are_ready
+
         return self._use_perceptual_loss
 
     def add_perceptual_loss(self, creation_per_loss, scale_loss=1e-2):
