@@ -59,7 +59,7 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
             Scale of the additional loss.
         """
         if not self._l1_or_l2_loss_vars_are_ready:
-            self._prepare_training_vars()
+            L1orL2LossModuleGenerator._prepare_training_vars(self)
         # if `use_l1` is false, when l2 will be used
         self._use_l1 = use_l1
         self._lambda = scale
