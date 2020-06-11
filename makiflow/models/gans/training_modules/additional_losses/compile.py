@@ -27,6 +27,10 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
 
     """
 
+    def __init__(self):
+        L1orL2LossModuleGenerator.__init__(self)
+        PerceptualLossModuleGenerator.__init__(self)
+
     def _prepare_training_vars(self):
         if not self._set_for_training:
             super()._setup_for_training()
