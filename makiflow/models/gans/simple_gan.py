@@ -233,7 +233,7 @@ class SimpleGAN:
 
                     # Train generator
                     # if user use l1 or l2 loss
-                    if self._generator_discriminator.is_use_l1() is not None:
+                    if self._generator_discriminator.is_use_l1_or_l2_loss() is not None:
                         Xreal = image_batch
                     else:
                         Xreal = None
