@@ -36,7 +36,8 @@ class Discriminator(BinaryCETrainingModuleDiscriminator):
 class GeneratorDiscriminator(BinaryCETrainingModuleGenerator):
 
     def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
-        GeneratorDiscriminatorBasic.__init__(generator=generator,
+        GeneratorDiscriminatorBasic.__init__(self,
+                                             generator=generator,
                                              discriminator=discriminator,
                                              name=name
         )
