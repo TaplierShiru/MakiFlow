@@ -17,18 +17,66 @@
 
 
 from .main_modules import GANsBasic
+from makiflow.base import InputMakiLayer, MakiTensor
 import numpy as np
-
-# TODO: Add comments into model
 
 
 class Generator(GANsBasic):
 
-    def __init__(self, input_s, output, name, use_noise_as_input=True):
+    def __init__(self,
+                 input_s: InputMakiLayer,
+                 output: MakiTensor,
+                 name: str,
+                 use_noise_as_input=True,
+                 custom_noise_function=None):
+        """
+        Create model of the Generator.
+
+        Parameters
+        ----------
+        input_s : InputMakiLayer
+            Input layer for this model.
+        output : MakiTensor
+            Output tensor for this model.
+        name : str
+            Name of this model.
+        use_noise_as_input : bool
+            If equal to true as input will be noise ( `np.random.normal` in range `(0, 1)` ),
+            otherwise as input will be some images.
+        custom_noise_function : func
+            Function that return certain noise according to input size,
+            i. e. this function should have input parameter `size`. By default will be used function from example below.
+            Example:
+            def get_noise_example(size=None):
+                return np.random.normal(0, 1, size=size)
+        """
+        if use_noise_as_input:
+            if custom_noise_function is not None:
+                self._custom_noise_function = custom_noise_function
+            else:
+                def get_noise_example(size=None):
+                    return np.random.normal(0, 1, size=size)
+                self._custom_noise_function = get_noise_example
+        else:
+            self._custom_noise_function = None
         self._use_noise_as_input = use_noise_as_input
         super().__init__(input_s=input_s, output=output, name=name)
 
     def generate(self, x=None):
+        """
+        Generate image
+
+        Parameters
+        ----------
+        x : np.ndarray of list
+            Input array for this model, by default equal to `None` which mean that input it's noise,
+            otherwise it can be list of images or some other form of noise
+
+        Returns
+        ----------
+        same type as input
+            Generated images
+        """
         if x is None:
             x = self.get_noise()
         return self._session.run(
@@ -37,11 +85,25 @@ class Generator(GANsBasic):
         )
 
     def get_noise(self, size=None):
+        """
+        Get noise of these model with certain size
+
+        Parameters
+        ----------
+        size : tuple or list
+            Size of the noise array.
+
+        Returns
+        ----------
+        np.ndarray
+            Noise with certain size according to `size` parameter.
+            NOTICE! If `use_noise_as_input` was set as `False` as output will be `None` value.
+        """
         if not self._use_noise_as_input:
             return None
 
         if size is None:
-            x = np.random.normal(0, 1, size=super().get_input_shape())
+            x = self._custom_noise_function(size=super().get_input_shape())
         else:
-            x = np.random.normal(0, 1, size=size)
+            x = self._custom_noise_function(size=size)
         return x.astype(np.float32)

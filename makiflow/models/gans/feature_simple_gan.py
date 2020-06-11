@@ -17,16 +17,15 @@
 
 import tensorflow as tf
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 import numpy as np
-import cv2
 
 from makiflow.models.common.utils import moving_average
 from .training_modules import FeatureBinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
 from .generator import Generator
 from .pipeline.input_gen_layer import InputGenLayer
 from .utils import visualise_sheets_of_images
+
 
 class Discriminator(BinaryCETrainingModuleDiscriminator):
     pass

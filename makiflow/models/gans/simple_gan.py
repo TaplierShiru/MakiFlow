@@ -17,10 +17,8 @@
 
 import tensorflow as tf
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 import numpy as np
-import cv2
 
 from makiflow.models.common.utils import moving_average
 

@@ -21,8 +21,6 @@ from .gansbasic import GANsBasic
 from makiflow.base.maki_entities import MakiTensor
 
 from copy import copy
-import tensorflow as tf
-import numpy as np
 
 
 class GeneratorDiscriminatorBasic(GANsBasic):

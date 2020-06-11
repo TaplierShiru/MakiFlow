@@ -17,9 +17,6 @@
 
 from makiflow.models.gans.main_modules import GeneratorDiscriminatorBasic
 
-import tensorflow as tf
-import numpy as np
-
 
 class BasicAdditionalLossModuleGenerator(GeneratorDiscriminatorBasic):
 

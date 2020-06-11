@@ -23,6 +23,28 @@ COLORSPACE_RGB = 'RGB'
 COLORSPACE_LAB = 'LAB'
 
 
+def pixelwise_accuracy(img_real, img_fake, colorspace, thresh):
+    """
+    Measures the accuracy of the colorization process by comparing pixels
+    """
+    img_real = postprocess(img_real, colorspace, COLORSPACE_LAB)
+    img_fake = postprocess(img_fake, colorspace, COLORSPACE_LAB)
+
+    diffL = tf.abs(tf.round(img_real[..., 0]) - tf.round(img_fake[..., 0]))
+    diffA = tf.abs(tf.round(img_real[..., 1]) - tf.round(img_fake[..., 1]))
+    diffB = tf.abs(tf.round(img_real[..., 2]) - tf.round(img_fake[..., 2]))
+
+    # within %thresh of the original
+    predL = tf.cast(tf.less_equal(diffL, 1 * thresh), tf.float64)        # L: [0, 100]
+    predA = tf.cast(tf.less_equal(diffA, 2.2 * thresh), tf.float64)      # A: [-110, 110]
+    predB = tf.cast(tf.less_equal(diffB, 2.2 * thresh), tf.float64)      # B: [-110, 110]
+
+    # all three channels are within the threshold
+    pred = predL * predA * predB
+
+    return tf.reduce_mean(pred)
+
+
 def preprocess(img, colorspace_in, colorspace_out):
     if colorspace_out.upper() == COLORSPACE_RGB:
         if colorspace_in == COLORSPACE_LAB:
