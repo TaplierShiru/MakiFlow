@@ -32,6 +32,10 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
             super()._setup_for_training()
         # VARIABLES PREPARATION
         self._feature_matching_loss_is_built = False
+        self._layer_tensor_feature_disc = None
+        self._feature_scale = 1.0
+        self._ce_scale = 1.0
+        self._use_feature_loss_only = False
 
         self._logits = self._training_outputs[0]
         self._num_classes = self._logits.get_shape()[-1]
@@ -53,7 +57,6 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
                                                              self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor())
 
         super()._prepare_training_vars()
-
         self._training_vars_are_ready = True
 
     def add_feature_matching(self, layer_tensor_feature_disc: MakiTensor,
@@ -77,7 +80,6 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
         """
         # `layer_name_disc` will be used in the L2 loss for feature matching
         self._layer_tensor_feature_disc = layer_tensor_feature_disc
-        self._feature_loss_is_set = True
         self._feature_scale = feature_scale
         self._ce_scale = ce_scale
         self._use_feature_loss_only = use_feature_loss_only
@@ -88,12 +90,11 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
         if self._use_feature_loss_only:
             self._feature_matching_loss = tf.reduce_mean(
                 tf.square(
-                    tf.reduce_mean(self._feature_output_fake, axis=0) - tf.reduce_mean(self._feature_output_real,
-                                                                                       axis=0)
+                    tf.reduce_mean(self._feature_output_fake, axis=0) - \
+                    tf.reduce_mean(self._feature_output_real, axis=0)
                 )
             ) * self._feature_scale
         else:
-            # TODO: Delete these self variable, keep them like local. In this case its just for debugging stuff.
             self._ce_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self._labels,
                                                                     logits=self._logits,
                                                                     name='generator_loss'
@@ -178,7 +179,7 @@ class FeatureBinaryCETrainingModuleGenerator(BasicTrainingModule):
 
         assert optimizer is not None
         assert self._session is not None
-        assert self._feature_loss_is_set, "Feature loss is not added!"
+        assert self._feature_matching_loss_is_built, "Feature loss is not added!"
         train_op = self._minimize_feature_matching_ce_loss(optimizer, global_step)
         train_costs = []
 

@@ -16,26 +16,71 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .basic_loss_module import BasicAdditionalLossModuleGenerator
+from makiflow.models.gans.main_modules import GeneratorDiscriminatorBasic
 
 import tensorflow as tf
-import numpy as np
-
-EPSILON = np.float32(1e-32)
 
 
-class L1orL2LossModuleGenerator(BasicAdditionalLossModuleGenerator):
+class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
+
+    NOTIFY_BUILD_L1_SLASH_L2_LOSS = "L1/L2 loss was built"
+
+    def _prepare_training_vars(self):
+        if not self._set_for_training:
+            super()._setup_for_training()
+        self._use_l1 = False
+        self._use_l1_or_l2_loss = False
+        self._lambda = 1.0
+        self._l1_or_l2_loss_is_built = False
+
+    def is_use_l1_or_l2_loss(self) -> bool:
+        """
+        Return bool variable which shows whether it is being used l1/l2 or not.
+
+        """
+        if not self._training_vars_are_ready:
+            self._prepare_training_vars()
+        return self._use_l1_or_l2_loss
+
+    def add_l1_or_l2_loss(self, use_l1=True, scale=10.0):
+        """
+        Add additional loss for model.
+
+        Parameters
+        ----------
+        use_l1 : bool
+            Add l1 loss for model, otherwise add l2 loss.
+        scale : float
+            Scale of the additional loss.
+        """
+        if not self._training_vars_are_ready:
+            self._prepare_training_vars()
+        # if `use_l1` is false, when l2 will be used
+        self._use_l1 = use_l1
+        self._lambda = scale
+        self._use_l1_or_l2_loss = True
 
     def _build_l1_or_l2_loss(self):
-        if self._use_l1:
-            # build l1
-            additional_loss = tf.reduce_mean(tf.abs(self._gen_product - self._input_real_image)) * self._lambda
-        else:
-            # build l2
-            additional_loss = tf.reduce_mean(
-                tf.square(self._gen_product - self._input_real_image)
-            ) * 0.5 * self._lambda
+        if not self._l1_or_l2_loss_is_built:
+            if self._input_real_image is None:
+                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
 
-        # add additional loss to final loss
-        return additional_loss
+            if self._gen_product is None:
+                # create output tensor from generator (in train set up)
+                self._gen_product = self._return_training_graph_from_certain_output(
+                    self._generator.get_outputs_maki_tensors()[0]
+                )
+
+            if self._use_l1:
+                # build l1
+                self._l1_or_l2_loss = tf.reduce_mean(tf.abs(self._gen_product - self._input_real_image)) * self._lambda
+            else:
+                # build l2
+                self._l1_or_l2_loss = tf.reduce_mean(
+                    tf.square(self._gen_product - self._input_real_image)
+                ) * 0.5 * self._lambda
+            print(L1orL2LossModuleGenerator.NOTIFY_BUILD_L1_SLASH_L2_LOSS)
+            self._l1_or_l2_loss_is_built = True
+
+        return self._l1_or_l2_loss
 

@@ -25,6 +25,7 @@ from makiflow.models.common.utils import new_optimizer_used, loss_is_built
 import numpy as np
 from sklearn.utils import shuffle
 from makiflow.models.classificator.utils import error_rate
+
 EPSILON = np.float32(1e-32)
 
 
@@ -52,9 +53,7 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
         )
 
         super()._prepare_training_vars()
-
         self._training_vars_are_ready = True
-
 
     def _build_binary_ce_loss(self):
         #self._binary_ce_loss = self._labels * tf.log(1 - self._logits + EPSILON)
@@ -64,7 +63,7 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
         )
 
         self._binary_ce_loss = tf.reduce_mean(self._binary_ce_loss)
-        self._binary_ce_loss = self._build_additional_losses(self._binary_ce_loss)
+        self._binary_ce_loss = super()._build_additional_losses(self._binary_ce_loss)
         self._final_binary_ce_loss = self._build_final_loss(self._binary_ce_loss)
 
         self._binary_ce_loss_is_built = True

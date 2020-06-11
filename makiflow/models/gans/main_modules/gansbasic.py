@@ -42,7 +42,7 @@ class GANsBasic(MakiCore):
 
         self._gen_product = None
         self._input_real_image = None
-
+        # TODO: refactor wasserstein gans
         self._wasserstein_is_built = False
 
     def predict(self, x):

@@ -19,21 +19,18 @@
 from .l1_or_l2_loss import L1orL2LossModuleGenerator
 from .perceptual_loss import PerceptualLossModuleGenerator
 
-import tensorflow as tf
-from makiflow.models.common.utils import new_optimizer_used, loss_is_built
-import numpy as np
-
-EPSILON = np.float32(1e-32)
-
 
 class BasicTrainingModule(L1orL2LossModuleGenerator,
                           PerceptualLossModuleGenerator):
+    """
+    Connect additional losses
 
+    """
     def _build_additional_losses(self, total_loss):
-        if self.is_use_l1():
+        if super().is_use_l1_or_l2_loss():
             total_loss += self._build_l1_or_l2_loss()
 
-        if self.is_use_perceptual_loss():
+        if super().is_use_perceptual_loss():
             total_loss += self._build_perceptual_loss()
 
         return total_loss
