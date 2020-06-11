@@ -142,7 +142,9 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
                 else:
                     generated = self._generator.get_noise()
 
-                if not(self.is_use_l1() or self.is_use_perceptual_loss()):
+                if not(super().is_use_l1_or_l2_loss() or \
+                       super().is_use_perceptual_loss()
+                ):
                     train_cost_batch, _ = self._session.run(
                         [self._final_binary_ce_loss, train_op],
                         feed_dict={self._images: generated}
