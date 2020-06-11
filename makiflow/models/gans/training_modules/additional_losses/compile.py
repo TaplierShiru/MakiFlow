@@ -32,7 +32,8 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
         GeneratorDiscriminatorBasic.__init__(self,
                                              generator=generator,
                                              discriminator=discriminator,
-                                             name=name)
+                                             name=name
+        )
         L1orL2LossModuleGenerator.__init__(self)
         PerceptualLossModuleGenerator.__init__(self)
 
