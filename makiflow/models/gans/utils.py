@@ -25,7 +25,30 @@ COLORSPACE_LAB = 'LAB'
 
 def pixelwise_accuracy(img_real, img_fake, colorspace, thresh):
     """
-    Measures the accuracy of the colorization process by comparing pixels
+    Measures the accuracy of the colorization process by comparing pixels.
+    NOTICE! Input `img_real` and `img_fake` should be in range [-1, 1] and mush have the same type of `colorspace`.
+    More detail about this measure of the performance you can found here: https://arxiv.org/pdf/1803.05400.pdf
+
+    Parameters
+    ----------
+    img_real : tf.Tensor or tf.Variable
+        Tensor/Variable of real images, should be in range [-1, 1]
+    img_fake : tf.Tensor or tf.Variable
+        Tensor/Variable of fake images (i. e. generated from GANs), should be in range [-1, 1]
+    colorspace : str
+        Color space of input images. `img_real` and `img_fake` mush have the same type of color space.
+        RGB color space: "RGB" string,
+        LAB color space: "LAB" string,
+        Register does not matter in this case
+    thresh : float
+        A threshold distance used for each color channel.
+        For example: value `thresh` = 2,
+        means that difference error between original image and fake (generated) image is equal to 2 percent
+
+    Returns
+    ----------
+    tf.Tensor
+        Measure of the performance (not in percent)
     """
     img_real = postprocess(img_real, colorspace, COLORSPACE_LAB)
     img_fake = postprocess(img_fake, colorspace, COLORSPACE_LAB)
@@ -46,6 +69,29 @@ def pixelwise_accuracy(img_real, img_fake, colorspace, thresh):
 
 
 def preprocess(img, colorspace_in, colorspace_out):
+    """
+    Pre proccess function for images, which normalize input images transfer to certain color space
+    NOTICE! Input images should be NOT normalized.
+
+    Parameters
+    ----------
+    img : tf.Tensor or tf.Variable
+        Tensor/Variable of real images.
+    colorspace_in : str
+        Color space of input images.
+        RGB color space: "RGB" string,
+        LAB color space: "LAB" string,
+        Register does not matter in this case
+    colorspace_out : str
+        Color space of output images.
+        RGB color space: "RGB" string,
+        LAB color space: "LAB" string,
+        Register does not matter in this case
+    Returns
+    ----------
+    tf.Tensor
+        Normalized image according to `colorspace_in` and `colorspace_out`
+    """
     if colorspace_out.upper() == COLORSPACE_RGB:
         if colorspace_in == COLORSPACE_LAB:
             img = lab_to_rgb(img)
@@ -67,6 +113,29 @@ def preprocess(img, colorspace_in, colorspace_out):
 
 
 def postprocess(img, colorspace_in, colorspace_out):
+    """
+    Post proccess function for images, which transfer normalize input images transfer to their color space.
+
+    Parameters
+    ----------
+    img : tf.Tensor or tf.Variable
+        Tensor/Variable of real images.
+    colorspace_in : str
+        Color space of input images.
+        RGB color space: "RGB" string, If `colorspace_in` equal to RGB, `img` should be in rage [-1, 1]
+        LAB color space: "LAB" string, If `colorspace_in` equal to LAB, `img` should be in rage [-1, 1]
+        Register does not matter in this case
+    colorspace_out : str
+        Color space of output images.
+        Final image will be not normalized, for example RGB image will be in range [0, 255].
+        RGB color space: "RGB" string,
+        LAB color space: "LAB" string,
+        Register does not matter in this case
+    Returns
+    ----------
+    tf.Tensor
+        Original image according to `colorspace_in` and `colorspace_out`
+    """
     if colorspace_in.upper() == COLORSPACE_RGB:
         # [-1, 1] => [0, 1]
         img = (img + 1) / 2
@@ -171,10 +240,64 @@ def lab_to_rgb(lab):
         return tf.reshape(srgb_pixels, tf.shape(lab))
 
 
-def img_from_lab_to_rgb(img, sess):
+def img_LAB2RGB_postprocess(img, sess=None):
+    """
+    Auxiliary function for restoring `img` from LAB color space to RGB.
+    Input images should be normalized in their color space.
+    Usually this function is used as parameter for 'restore_image_function` for training GAns
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Array of images, which is will be translated to RGB color space from LAB
+    sess : tf.Session
+        Session to get result.
+        By default equal to `None`,
+        session will be created in this function and safely closed at the end of all operations
+    """
+    was_created = False
+    if sess is None:
+        sess = tf.Session()
+        was_created = True
     img = tf.constant(img, dtype=tf.float32)
     img = postprocess(img, COLORSPACE_LAB, COLORSPACE_RGB)
-    return sess.run(img) * 255.0
+
+    final_output = sess.run(img) * 255.0
+
+    if was_created:
+        sess.close()
+
+    return final_output
+
+
+def img_RGB2LAB_preprocess(img, sess=None):
+    """
+    Auxiliary function for restoring `img` from RGB color space to LAB and at the end normalize output in range [-1, 1].
+    Input images should be NOT normalized.
+    Usually this function is used as preprocessing function
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Array of images, which is will be translated to LAB color space from RGB
+    sess : tf.Session
+        Session to get result.
+        By default equal to `None`,
+        session will be created in this function and safely closed at the end of all operations
+    """
+    was_created = False
+    if sess is None:
+        sess = tf.Session()
+        was_created = True
+    img = tf.constant(img, dtype=tf.float32)
+    img = preprocess(img, COLORSPACE_RGB, COLORSPACE_LAB)
+
+    final_output = sess.run(img)
+
+    if was_created:
+        sess.close()
+
+    return final_output
 
 
 def visualise_sheets_of_images(images,
