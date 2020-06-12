@@ -27,6 +27,8 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
 
     def _prepare_training_vars(self):
         if not self._l1_or_l2_loss_vars_are_ready:
+            if not self._set_for_training:
+                super()._setup_for_training()
             self._use_l1 = False
             self._use_l1_or_l2_loss = False
             self._lambda = 1.0

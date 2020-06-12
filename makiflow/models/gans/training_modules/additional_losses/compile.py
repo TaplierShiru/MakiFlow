@@ -18,7 +18,6 @@
 
 from .l1_or_l2_loss import L1orL2LossModuleGenerator
 from .perceptual_loss import PerceptualLossModuleGenerator
-from makiflow.models.gans.main_modules import GeneratorDiscriminatorBasic
 
 
 class BasicTrainingModule(L1orL2LossModuleGenerator,
