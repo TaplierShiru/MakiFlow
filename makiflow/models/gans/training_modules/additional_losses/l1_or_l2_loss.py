@@ -25,15 +25,21 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
 
     NOTIFY_BUILD_L1_SLASH_L2_LOSS = "L1/L2 loss was built"
 
-    def __init__(self):
-        self._l1_or_l2_loss_vars_are_ready = False
-
     def _prepare_training_vars(self):
         if not self._l1_or_l2_loss_vars_are_ready:
             self._use_l1 = False
             self._use_l1_or_l2_loss = False
             self._lambda = 1.0
             self._l1_or_l2_loss_is_built = False
+
+            if self._input_real_image is None:
+                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
+
+            if self._gen_product is None:
+                # create output tensor from generator (in train set up)
+                self._gen_product = self._return_training_graph_from_certain_output(
+                    self._generator.get_outputs_maki_tensors()[0]
+                )
 
             self._l1_or_l2_loss_vars_are_ready = True
 
@@ -67,15 +73,6 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
 
     def _build_l1_or_l2_loss(self):
         if not self._l1_or_l2_loss_is_built:
-            if self._input_real_image is None:
-                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
-
-            if self._gen_product is None:
-                # create output tensor from generator (in train set up)
-                self._gen_product = self._return_training_graph_from_certain_output(
-                    self._generator.get_outputs_maki_tensors()[0]
-                )
-
             if self._use_l1:
                 # build l1
                 self._l1_or_l2_loss = tf.reduce_mean(tf.abs(self._gen_product - self._input_real_image)) * self._lambda
@@ -84,6 +81,7 @@ class L1orL2LossModuleGenerator(GeneratorDiscriminatorBasic):
                 self._l1_or_l2_loss = tf.reduce_mean(
                     tf.square(self._gen_product - self._input_real_image)
                 ) * 0.5 * self._lambda
+
             print(L1orL2LossModuleGenerator.NOTIFY_BUILD_L1_SLASH_L2_LOSS)
             self._l1_or_l2_loss_is_built = True
 

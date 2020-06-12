@@ -23,8 +23,23 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
 
     NOTIFY_BUILD_PERCEPTUAL_LOSS = "Perceptual loss was built"
 
-    def __init__(self):
-        self._perceptual_loss_vars_are_ready = False
+    def _prepare_training_vars(self):
+        if not self._perceptual_loss_vars_are_ready:
+            self._scale_per_loss = 1.0
+            self._use_perceptual_loss = False
+            self._creation_per_loss = None
+            self._perceptual_loss_is_built = False
+
+            if self._input_real_image is None:
+                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
+
+            if self._gen_product is None:
+                # create output tensor from generator (in train set up)
+                self._gen_product = self._return_training_graph_from_certain_output(
+                    self._generator.get_outputs_maki_tensors()[0]
+                )
+
+            self._perceptual_loss_vars_are_ready = True
 
     def is_use_perceptual_loss(self) -> bool:
         """
@@ -58,29 +73,14 @@ class PerceptualLossModuleGenerator(GeneratorDiscriminatorBasic):
         self._scale_per_loss = scale_loss
         self._use_perceptual_loss = True
 
-    def _prepare_training_vars(self):
-        if not self._perceptual_loss_vars_are_ready:
-            self._scale_per_loss = 1.0
-            self._use_perceptual_loss = False
-            self._creation_per_loss = None
-            self._perceptual_loss_is_built = False
-            self._perceptual_loss_vars_are_ready = True
-
     def _build_perceptual_loss(self):
         if not self._perceptual_loss_is_built:
-            if self._input_real_image is None:
-                self._input_real_image = self._discriminator.get_inputs_maki_tensors()[0].get_data_tensor()
-
-            if self._gen_product is None:
-                # create output tensor from generator (in train set up)
-                self._gen_product = self._return_training_graph_from_certain_output(
-                    self._generator.get_outputs_maki_tensors()[0]
-                )
-
-            self._perceptual_loss = self._creation_per_loss(self._gen_product,
-                                                      self._input_real_image,
-                                                      self._session
+            self._perceptual_loss = self._creation_per_loss(
+                self._gen_product,
+                self._input_real_image,
+                self._session
             ) * self._scale_per_loss
+
             print(PerceptualLossModuleGenerator.NOTIFY_BUILD_PERCEPTUAL_LOSS)
             self._perceptual_loss_is_built = True
 

@@ -29,13 +29,12 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
     """
 
     def __init__(self, generator, discriminator, name='GeneratorDiscriminator'):
-        GeneratorDiscriminatorBasic.__init__(self,
-                                             generator=generator,
-                                             discriminator=discriminator,
-                                             name=name
+        self._l1_or_l2_loss_vars_are_ready = False
+        self._perceptual_loss_vars_are_ready = False
+        super().__init__(generator=generator,
+                         discriminator=discriminator,
+                         name=name
         )
-        L1orL2LossModuleGenerator.__init__(self)
-        PerceptualLossModuleGenerator.__init__(self)
 
     def _build_additional_losses(self, total_loss):
         if super().is_use_l1_or_l2_loss():
