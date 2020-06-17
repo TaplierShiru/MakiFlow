@@ -43,4 +43,3 @@ class BasicTrainingModule(L1orL2LossModuleGenerator,
             total_loss += self._build_perceptual_loss()
 
         return total_loss
-
