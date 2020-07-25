@@ -184,3 +184,16 @@ class NeuralRenderBasis(MakiCore):
             The dictionary contains pairs: { name of the tensor: MakiTensor }.
         """
         return self._graph_tensors
+
+    def get_logits_shape(self):
+        return self._outputs[0].get_shape()
+
+    def get_outputs_maki_tensors(self) -> list:
+        return self._outputs
+
+    def get_input_shape(self):
+        shape = self._inputs[0].get_shape()
+        return shape
+
+    def get_inputs_maki_tensors(self) -> list:
+        return self._inputs
