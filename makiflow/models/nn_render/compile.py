@@ -240,6 +240,12 @@ class NeuralRenderAdversarialControler:
                     else:
                         x_gen_batch = None
 
+                    # mask
+                    if self._gen_in_mask is not None:
+                        x_mask_batch = mask_batch_preload[current_batch_preload]
+                    else:
+                        x_mask_batch = None
+
                     current_batch_preload += 1
 
                     generated_images = self._generator.predict(x=x_gen_batch)
@@ -262,7 +268,7 @@ class NeuralRenderAdversarialControler:
 
                     # Train generator
                     gen_cost = self._generator_discriminator.fit_ce(
-                        Xreal=image_batch, Xgen=x_gen_batch, Xmask=mask_batch_preload,
+                        Xreal=image_batch, Xgen=x_gen_batch, Xmask=x_mask_batch,
                         epochs=epochs_generator,
                         optimizer=optimizer_generator,
                         global_step=global_step_gen
