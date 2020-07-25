@@ -87,6 +87,7 @@ class NeuralRenderAdversarialControler:
         self._generator_is_set = False
         self._gen_in_target = None
         self._gen_in_input = None
+        self._gen_in_mask = None
 
     def set_session(self, sess: tf.Session):
         """
@@ -113,6 +114,9 @@ class NeuralRenderAdversarialControler:
         self._generator_is_set = True
         self._gen_in_target = gen.get_iterator()[NNRIterator.IMAGE]
         self._gen_in_input = gen.get_iterator()[NNRIterator.UVMAP]
+        if self._generator_discriminator._use_mask:
+            self._gen_in_mask = gen.get_iterator()[NNRIterator.BIN_MASK]
+
 
     def genfit_ce(
             self, iterations, restore_image_function,
@@ -180,6 +184,8 @@ class NeuralRenderAdversarialControler:
 
                 image_batch_preload = []
                 x_gen_batch_preload = []
+                mask_batch_preload = []
+
                 x_gen_batch = None
                 current_batch_preload = 0
 
@@ -202,15 +208,26 @@ class NeuralRenderAdversarialControler:
                         current_batch_preload = 0
                         x_gen_batch_preload = []
                         image_batch_preload = []
+                        mask_batch_preload = []
 
                         for _ in range(pre_download):
                             if self._gen_in_input is not None:
                                 # if we separate this, generator will provide different images
-                                x_gen_batch_single, image_batch_single = self._session.run([
-                                    self._gen_in_input,
-                                    self._gen_in_target
-                                ]
-                                )
+                                if self._gen_in_mask is None:
+                                    x_gen_batch_single, image_batch_single = self._session.run([
+                                        self._gen_in_input,
+                                        self._gen_in_target
+                                        ]
+                                    )
+                                else:
+                                    x_gen_batch_single, image_batch_single, mask_single = self._session.run([
+                                        self._gen_in_input,
+                                        self._gen_in_target,
+                                        self._gen_in_mask
+                                        ]
+                                    )
+                                    mask_batch_preload.append(mask_single)
+
                                 x_gen_batch_preload.append(x_gen_batch_single)
                             else:
                                 image_batch_single = self._session.run(self._gen_in_target)
@@ -245,7 +262,7 @@ class NeuralRenderAdversarialControler:
 
                     # Train generator
                     gen_cost = self._generator_discriminator.fit_ce(
-                        Xreal=image_batch, Xgen=x_gen_batch,
+                        Xreal=image_batch, Xgen=x_gen_batch, Xmask=mask_batch_preload,
                         epochs=epochs_generator,
                         optimizer=optimizer_generator,
                         global_step=global_step_gen
@@ -293,6 +310,7 @@ class NeuralRenderAdversarialControler:
     def fit_ce(
             self, Xtrain, restore_image_function,
             Xgen=None,
+            Xmask=None,
             optimizer_discriminator=None,
             optimizer_generator=None, test_period=1,
             epochs=1, test_period_disc=1,
@@ -305,6 +323,7 @@ class NeuralRenderAdversarialControler:
         """
         Start training of the SimpleGAN.
         TODO: Write full docs.
+        TODO: Add support mask, `Xmask` input
         Parameters
         ----------
         Xtrain : list or np.ndarray

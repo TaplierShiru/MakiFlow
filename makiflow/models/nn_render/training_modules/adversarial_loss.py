@@ -38,6 +38,10 @@ class AdversarialTrainingModule(AdversarialBasic):
         self._adversarial_loss_is_built = False
 
         self._logits = self._training_outputs[0]
+        out_shape = self._outputs[0].get_shape()
+        self._out_h = out_shape[1]
+        self._out_w = out_shape[2]
+        self._batch_sz = out_shape[0]
         self._num_classes = self._logits.get_shape()[-1]
 
         num_labels = self._logits.get_shape()[0]
@@ -61,7 +65,11 @@ class AdversarialTrainingModule(AdversarialBasic):
 
     def _setup_masked_adversarial_loss_inputs(self):
         if self._use_mask:
-            self._adv_mask = self._discriminator_model.get_iterator()[NNRIterator.BIN_MASK]
+            self._adv_mask = tf.placeholder(
+                shape=[self._batch_sz, self._out_h, self._out_w, 1],
+                dtype=tf.float32,
+                name='mask_adv'
+            )
 
     def _build_adversarial_loss(self):
         adversarial_loss = tf.nn.sigmoid_cross_entropy_with_logits(
@@ -120,7 +128,7 @@ class AdversarialTrainingModule(AdversarialBasic):
         return self._adversarial_train_op
 
     def fit_ce(
-            self, Xreal, Xgen, optimizer=None, epochs=1, global_step=None
+            self, Xreal, Xgen, Xmask, optimizer=None, epochs=1, global_step=None
     ):
         """
         Method for training the model. Works faster than `verbose_fit` method because
@@ -129,15 +137,6 @@ class AdversarialTrainingModule(AdversarialBasic):
 
         Parameters
         ----------
-        Xtrain : numpy array
-            Training images stacked into one big array with shape (num_images, image_w, image_h, image_depth).
-        Ytrain : numpy array
-            Training label for each image in `Xtrain` array with shape (num_images).
-            IMPORTANT: ALL LABELS MUST BE NOT ONE-HOT ENCODED, USE SPARSE TRAINING DATA INSTEAD.
-        Xtest : numpy array
-            Same as `Xtrain` but for testing.
-        Ytest : numpy array
-            Same as `Ytrain` but for testing.
         optimizer : tensorflow optimizer
             Model uses tensorflow optimizers in order train itself.
         epochs : int
@@ -166,11 +165,21 @@ class AdversarialTrainingModule(AdversarialBasic):
                     generated_batch = Xgen[j * self._batch_sz:(j + 1) * self._batch_sz]
                     Xreal_batch = Xreal[j * self._batch_sz:(j + 1) * self._batch_sz]
 
-                    train_cost_batch, _ = self._session.run(
-                        [self._final_adversarial_loss, train_op],
-                        feed_dict={self._images: generated_batch,
-                                   self._input_real_image: Xreal_batch}
-                    )
+                    if self._use_mask:
+                        mask_batch = Xmask[j * self._batch_sz:(j + 1) * self._batch_sz]
+
+                        train_cost_batch, _ = self._session.run(
+                            [self._final_adversarial_loss, train_op],
+                            feed_dict={self._images: generated_batch,
+                                       self._input_real_image: Xreal_batch,
+                                       self._adv_mask: mask_batch}
+                        )
+                    else:
+                        train_cost_batch, _ = self._session.run(
+                            [self._final_adversarial_loss, train_op],
+                            feed_dict={self._images: generated_batch,
+                                       self._input_real_image: Xreal_batch}
+                        )
 
                     train_costs.append(train_cost_batch)
 
