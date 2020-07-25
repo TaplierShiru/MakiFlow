@@ -175,4 +175,12 @@ class NeuralRenderBasis(MakiCore):
             self._prepare_training_vars()
         return self._training_out
 
-
+    def get_layers_names(self) -> dict:
+        """
+        Returns
+        -------
+        dict of MakiTensors
+            All the MakiTensors that appear earlier in the computational graph.
+            The dictionary contains pairs: { name of the tensor: MakiTensor }.
+        """
+        return self._graph_tensors

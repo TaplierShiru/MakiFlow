@@ -16,3 +16,4 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 from .rendererbasic import NeuralRenderBasis
+from .adversarial_basic import AdversarialBasic

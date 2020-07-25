@@ -23,6 +23,8 @@ from tqdm import tqdm
 
 PERCEPTUAL_LOSS = 'PERCEPTUAL LOSS'
 
+# TODO: Rewrite class into additional losses
+
 
 class PerceptualTrainingModule(NeuralRenderBasis):
     def _prepare_training_vars(self):
