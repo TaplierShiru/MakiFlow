@@ -54,7 +54,7 @@ class AdversarialTrainingModule(AdversarialBasic):
 
         # create output tensor from generator (in train set up)
         self._gen_product = self._return_training_graph_from_certain_output(
-            self._discriminator_model.get_outputs_maki_tensors()[0]
+            self._generator.get_outputs_maki_tensors()[0]
         )
 
         self._training_vars_are_ready = True
