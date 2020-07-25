@@ -38,10 +38,6 @@ class AdversarialTrainingModule(AdversarialBasic):
         self._adversarial_loss_is_built = False
 
         self._logits = self._training_outputs[0]
-        out_shape = self._outputs[0].get_shape()
-        self._out_h = out_shape[1]
-        self._out_w = out_shape[2]
-        self._batch_sz = out_shape[0]
         self._num_classes = self._logits.get_shape()[-1]
 
         num_labels = self._logits.get_shape()[0]
@@ -55,6 +51,7 @@ class AdversarialTrainingModule(AdversarialBasic):
         )
 
         self._input_real_image = self._discriminator_model.get_inputs_maki_tensors()[0].get_data_tensor()
+        self._in_h, self._in_w = self._input_real_image.get_shape().as_list()[1:3]
 
         # create output tensor from generator (in train set up)
         self._gen_product = self._return_training_graph_from_certain_output(
@@ -66,7 +63,7 @@ class AdversarialTrainingModule(AdversarialBasic):
     def _setup_masked_adversarial_loss_inputs(self):
         if self._use_mask:
             self._adv_mask = tf.placeholder(
-                shape=[self._batch_sz, self._out_h, self._out_w, 1],
+                shape=[self._batch_sz, self._in_h, self._in_w, 1],
                 dtype=tf.float32,
                 name='mask_adv'
             )
