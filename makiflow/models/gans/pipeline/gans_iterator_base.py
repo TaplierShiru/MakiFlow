@@ -16,6 +16,8 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
+# Class store names of iterator variables
+
 class GANsIterator:
     IMAGE = 'image'
     GEN_INPUT = 'gen_input'
