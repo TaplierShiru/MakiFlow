@@ -16,19 +16,4 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from makiflow.generators.pipeline.gen_base import GenLayer
-
-
-class InputGenLayer(GenLayer):
-    def __init__(
-            self, iterator, name, input_tensor_name: str
-    ):
-        self.iterator = iterator
-        self.input_tensor_name = input_tensor_name
-        super().__init__(
-            name=name,
-            input_tensor=self.iterator.get_iterator()[input_tensor_name]
-        )
-
-    def get_iterator(self):
-        return self.iterator.get_iterator()[self.input_tensor_name]
+from .feature_simple_gan import FeatureSimpleGAN, Discriminator, GeneratorDiscriminator

@@ -17,17 +17,18 @@
 
 from makiflow.generators.pipeline.map_method import MapMethod, PostMapMethod
 import tensorflow as tf
-from ..utils import COLORSPACE_LAB, COLORSPACE_RGB, preprocess
-
-class GANsIterator:
-    IMAGE = 'image'
-    GEN_INPUT = 'gen_input'
+from makiflow.models.gans.utils import COLORSPACE_LAB, COLORSPACE_RGB, preprocess
+from ..gans_iterator_base import GANsIterator
 
 
-class LoadDataMethod(MapMethod):
+class LoadDataMethodSimpleForm(MapMethod):
     def __init__(self, image_shape, gen_input_shape=None):
         """
-        Method to load data. It should be first method in map methods
+        Method to load data. It should be first method in map methods.
+        This is a simple form of load data method, i. e. images loaded from certain folder, which are not tfrecords
+        That can be can faster for some cases.
+        So, this method can't load something except images (PNG, JPG, BMP and etc...).
+        For loading other type of data refer to class LoadDataMethod, which is load tfrecords.
 
         Parameters
         ----------
@@ -159,15 +160,15 @@ class NormalizePostMethod(PostMapMethod):
             if self.use_float64:
                 img = tf.cast(img, dtype=tf.float64)
                 if self.use_caffe_norm:
-                  img = (img - self.divider) / self.divider
+                    img = (img - self.divider) / self.divider
                 else:
-                  img = tf.divide(img, self.divider, name='normalizing_image')
+                    img = tf.divide(img, self.divider, name='normalizing_image')
                 img = tf.cast(img, dtype=tf.float32)
             else:
                 if self.use_caffe_norm:
-                  img = (img - self.divider) / self.divider
+                    img = (img - self.divider) / self.divider
                 else:
-                  img = tf.divide(img, self.divider, name='normalizing_image')
+                    img = tf.divide(img, self.divider, name='normalizing_image')
             element[GANsIterator.IMAGE] = img
 
         if self.using_for_image_gen:
@@ -175,15 +176,15 @@ class NormalizePostMethod(PostMapMethod):
             if self.use_float64:
                 gen_input = tf.cast(gen_input, dtype=tf.float64)
                 if self.use_caffe_norm:
-                  gen_input = (gen_input - self.divider) / self.divider
+                    gen_input = (gen_input - self.divider) / self.divider
                 else:
-                  gen_input = tf.divide(gen_input, self.divider, name='normalizing_gen_input')
+                    gen_input = tf.divide(gen_input, self.divider, name='normalizing_gen_input')
                 gen_input = tf.cast(gen_input, dtype=tf.float32)
             else:
                 if self.use_caffe_norm:
-                  gen_input = (gen_input - self.divider) / self.divider
+                    gen_input = (gen_input - self.divider) / self.divider
                 else:
-                  gen_input = tf.divide(gen_input, self.divider, name='normalizing_gen_input')
+                    gen_input = tf.divide(gen_input, self.divider, name='normalizing_gen_input')
             element[GANsIterator.GEN_INPUT] = gen_input
 
         return element
@@ -214,4 +215,3 @@ class RGB2BGRPostMethod(PostMapMethod):
             # Swap channels
             element[GANsIterator.GEN_INPUT] = tf.reverse(gen_input, axis=[-1], name='RGB2BGR_gen_input')
         return element
-

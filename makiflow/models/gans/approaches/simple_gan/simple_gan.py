@@ -21,31 +21,32 @@ from sklearn.utils import shuffle
 import numpy as np
 
 from makiflow.models.common.utils import moving_average
-from .training_modules import FeatureBinaryCETrainingModuleGenerator, BinaryCETrainingModuleDiscriminator
-from .generator import Generator
-from .pipeline.input_gen_layer import InputGenLayer
-from .utils import visualise_sheets_of_images
+
+from makiflow.models.gans.utils import visualise_sheets_of_images
+from makiflow.models.gans.generator import Generator
+from makiflow.models.gans.training_modules import (BinaryCETrainingModuleGenerator,
+                                                   BinaryCETrainingModuleDiscriminator
+                                                   )
+from makiflow.models.gans.pipeline.input_gen_layer import InputGenLayer
 
 
 class Discriminator(BinaryCETrainingModuleDiscriminator):
     pass
 
 
-class GeneratorDiscriminator(FeatureBinaryCETrainingModuleGenerator):
+class GeneratorDiscriminator(BinaryCETrainingModuleGenerator):
     pass
 
 
-class FeatureSimpleGAN:
-    FEATURE_SIMPLE_GAN = 'FeatureSimpleGAN'
+class SimpleGAN:
+    SIMPLE_GAN = 'SimpleGAN'
 
     def __init__(self,
                  generator: Generator,
                  discriminator: Discriminator,
                  generator_discriminator: GeneratorDiscriminator):
         """
-        Create feature simple GANs model for training.
-        Only difference between SimpleGAN in method of training.
-        In this model used feature matching loss.
+        Create simple GANs model for training.
 
         Parameters
         ----------
@@ -58,7 +59,7 @@ class FeatureSimpleGAN:
         """
         self._discriminator = discriminator
         self._generator = generator
-        # Set layers from generator in disciminator as untrainable
+        # Set layers from generator in `generator_discriminator` as untrained
         untrain = []
         generator_names = list(generator.get_layers_names().keys())
         for name in generator_discriminator.get_layers_names().keys():
@@ -73,7 +74,7 @@ class FeatureSimpleGAN:
         self._gen_in_target = None
         self._gen_in_input = None
 
-    def set_session(self, sess: tf.Session):
+    def set_session(self, sess : tf.Session):
         """
         Set session in generator, discriminator, generator and discriminator (combined model) models.
 
@@ -102,19 +103,24 @@ class FeatureSimpleGAN:
         self._gen_in_target = gen_in_target
         self._gen_in_input = gen_in_input
 
-    def genfit_feature_ce(
-            self, iterations, restore_image_function,
-            final_image_size=None,
-            optimizer_discriminator=None,
-            optimizer_generator=None, test_period=1,
-            epochs=1, test_period_disc=1,
-            global_step_disc=None, global_step_gen=None,
-            show_images=False,
-            label_smoothing=0.9,
-            use_BGR2RGB=False,
-            pre_download=20,
-            epochs_discriminator=1, epochs_generator=1,
-    ):
+    def genfit_ce(
+        self, iterations,
+        restore_image_function,
+        final_image_size=None, 
+        optimizer_discriminator=None, 
+        optimizer_generator=None,
+        test_period=1,
+        epochs=1,
+        test_period_disc=1,
+        global_step_disc=None,
+        global_step_gen=None,
+        show_images=False,
+        label_smoothing=0.9,
+        use_BGR2RGB=False,
+        pre_download=20,
+        epochs_discriminator=1,
+        epochs_generator=1,
+        ):
         """
         Start training of the SimpleGAN with pipeline.
         TODO: Write full docs.
@@ -197,9 +203,10 @@ class FeatureSimpleGAN:
                         for _ in range(pre_download):
                             if self._gen_in_input is not None:
                                 # if we separate this, generator will provide different images
-                                x_gen_batch_single, image_batch_single = self._session.run(
-                                    [self._gen_in_input.get_data_tensor(),
-                                     self._gen_in_target.get_data_tensor()]
+                                x_gen_batch_single, image_batch_single = self._session.run([
+                                                                                            self._gen_in_input.get_data_tensor(),
+                                                                                            self._gen_in_target.get_data_tensor()
+                                                                                            ]
                                 )
                                 x_gen_batch_preload.append(x_gen_batch_single)
                             else:
@@ -225,23 +232,29 @@ class FeatureSimpleGAN:
                                                                     epochs=epochs_discriminator,
                                                                     test_period=test_period_disc,
                                                                     global_step=global_step_disc
-                                                                    )
+                    )
                     if test_period_disc != -1:
                         discriminator_accuracy += info_discriminator[BinaryCETrainingModuleDiscriminator.TRAIN_ACCURACY]
                     disc_cost = info_discriminator[BinaryCETrainingModuleDiscriminator.TRAIN_COSTS]
                     discriminator_cost = moving_average(discriminator_cost, sum(disc_cost) / len(disc_cost), j)
 
                     # Train generator
-                    gen_cost = self._generator_discriminator.fit_feature_ce(Xreal=image_batch, Xgen=x_gen_batch,
-                                                                            epochs=epochs_generator,
-                                                                            optimizer=optimizer_generator,
-                                                                            global_step=global_step_gen
-                                                                            )[
-                        FeatureBinaryCETrainingModuleGenerator.TRAIN_COSTS]
+                    # if user use l1 or l2 loss
+                    if self._generator_discriminator.is_use_l1_or_l2_loss() is not None:
+                        Xreal = image_batch
+                    else:
+                        Xreal = None
+                        
+                    gen_cost = self._generator_discriminator.fit_ce(Xreal=Xreal, Xgen=x_gen_batch,
+                                                                    epochs=epochs_generator,
+                                                                    optimizer=optimizer_generator,
+                                                                    global_step=global_step_gen
+                    )[BinaryCETrainingModuleGenerator.TRAIN_COSTS]
                     generator_cost = moving_average(generator_cost, sum(gen_cost) / len(gen_cost), j)
 
                 # close tqdm iterator for out safe
                 iterator.close()
+
                 # Validating the network on test data
                 if test_period != -1 and i % test_period == 0:
                     # TODO: Write additional tools for printing stuff
@@ -257,14 +270,14 @@ class FeatureSimpleGAN:
 
                     if final_image_size is not None:
                         generated_images = generated_images.reshape(generated_images.shape[0], *final_image_size)
-
+                    
                     generated_images = np.clip(restore_image_function(generated_images, self._session),
                                                0.0,
                                                255.0
                     ).astype(np.uint8)
 
                     visualise_sheets_of_images(generated_images,
-                                               prefix_name=FeatureSimpleGAN.FEATURE_SIMPLE_GAN,
+                                               prefix_name=SimpleGAN.SIMPLE_GAN,
                                                unique_index=i,
                                                show_images=show_images,
                                                use_BGR2RGB=use_BGR2RGB
@@ -277,21 +290,23 @@ class FeatureSimpleGAN:
             if iterator is not None:
                 iterator.close()
 
-    def fit_feature_ce(
-            self, Xtrain, restore_image_function,
-            Xgen=None,
-            final_image_size=None,
-            optimizer_discriminator=None,
-            optimizer_generator=None, test_period=1,
-            epochs=1, test_period_disc=1,
-            global_step_disc=None, global_step_gen=None,
-            show_images=False,
-            use_BGR2RGB=False,
-            label_smoothing=0.9,
-            epochs_discriminator=1, epochs_generator=1,
-    ):
+    def fit_ce(
+        self, Xtrain,
+        restore_image_function,
+        Xgen=None,
+        final_image_size=None, 
+        optimizer_discriminator=None, 
+        optimizer_generator=None, test_period=1,
+        epochs=1, test_period_disc=1,
+        global_step_disc=None, global_step_gen=None,
+        show_images=False,
+        use_BGR2RGB=False,
+        label_smoothing=0.9,
+        epochs_discriminator=1,
+        epochs_generator=1,
+        ):
         """
-        Start training of the FeatureSimpleGAN.
+        Start training of the SimpleGAN.
         TODO: Write full docs.
         Parameters
         ----------
@@ -322,7 +337,6 @@ class FeatureSimpleGAN:
                 Dictionary with all testing data(train error, train cost, test error, test cost)
                 for each test period.
         """
-
         assert (optimizer_discriminator is not None)
         assert (optimizer_generator is not None)
         assert (self._session is not None)
@@ -376,11 +390,17 @@ class FeatureSimpleGAN:
                     discriminator_cost = moving_average(discriminator_cost, sum(disc_cost) / len(disc_cost), j)
 
                     # Train generator
-                    gen_cost = self._generator_discriminator.fit_feature_ce(Xreal=image_batch, Xgen=x_gen_batch,
-                                                                            epochs=epochs_generator,
-                                                                            optimizer=optimizer_generator,
-                                                                            global_step=global_step_gen
-                    )[FeatureBinaryCETrainingModuleGenerator.TRAIN_COSTS]
+                    # if user use l1 or l2 loss
+                    if self._generator_discriminator.is_use_l1_or_l2_loss() is not None:
+                        Xreal = image_batch
+                    else:
+                        Xreal = None
+                        
+                    gen_cost = self._generator_discriminator.fit_ce(Xreal=Xreal, Xgen=x_gen_batch,
+                                                                    epochs=epochs_generator,
+                                                                    optimizer=optimizer_generator,
+                                                                    global_step=global_step_gen
+                    )[BinaryCETrainingModuleGenerator.TRAIN_COSTS]
                     generator_cost = moving_average(generator_cost, sum(gen_cost) / len(gen_cost), j)
 
                 # close tqdm iterator for out safe
@@ -411,9 +431,9 @@ class FeatureSimpleGAN:
                                                0.0,
                                                255.0
                     ).astype(np.uint8)
-
+                    
                     visualise_sheets_of_images(generated_images,
-                                               prefix_name=FeatureSimpleGAN.FEATURE_SIMPLE_GAN,
+                                               prefix_name=SimpleGAN.SIMPLE_GAN,
                                                unique_index=i,
                                                show_images=show_images,
                                                use_BGR2RGB=use_BGR2RGB

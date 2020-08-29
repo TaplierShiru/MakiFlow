@@ -20,7 +20,7 @@ from glob import glob
 import os
 from sklearn.utils import shuffle
 
-from .pipeline_base import PathGenerator
+from makiflow.generators.pipeline.gen_base import PathGenerator
 
 
 class GANsPathGenerator(PathGenerator, ABC):

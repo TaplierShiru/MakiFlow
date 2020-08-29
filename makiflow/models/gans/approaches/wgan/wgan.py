@@ -23,9 +23,11 @@ from sklearn.utils import shuffle
 import numpy as np
 
 from makiflow.models.common.utils import moving_average
-from .main_modules import GeneratorDiscriminatorBasic
-from .training_modules import WassersteinTrainingModuleGenerator, WassersteinTrainingModuleDiscriminator
-from .utils import visualise_sheets_of_images
+from makiflow.models.gans.main_modules import GeneratorDiscriminatorBasic
+from makiflow.models.gans.training_modules import (WassersteinTrainingModuleGenerator,
+                                                   WassersteinTrainingModuleDiscriminator
+                                                   )
+from makiflow.models.gans.utils import visualise_sheets_of_images
 
 
 class Discriminator(WassersteinTrainingModuleDiscriminator):

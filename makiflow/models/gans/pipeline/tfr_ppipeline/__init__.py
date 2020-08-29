@@ -15,38 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
-from abc import abstractmethod, ABC
-from makiflow.base import InputMakiLayer
-
-
-class PathGenerator(ABC):
-    @abstractmethod
-    def next_element(self) -> dict:
-        pass
-
-
-class GenLayer(InputMakiLayer):
-    def __init__(self, name, input_tensor):
-        self._name = name
-        self._input_tensor = input_tensor
-        super().__init__(
-            data_tensor=input_tensor,
-            name=name
-        )
-
-    @abstractmethod
-    def get_iterator(self):
-        pass
-
-    def get_shape(self):
-        return self._input_tensor.get_shape().as_list()
-
-    def get_name(self):
-        return self._name
-        
-    def get_params(self):
-        return []
-
-    def get_params_dict(self):
-        return {}
+from .data_preparation import record_mp_gans_train_data
+from .map_methods import (LoadDataMethod, RGB2LABPostMethod,
+                          RGB2BGRPostMethod, NormalizePostMethod,
+                          ResizePostMethod
+                          )
 

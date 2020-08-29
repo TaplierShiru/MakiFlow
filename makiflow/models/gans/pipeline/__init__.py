@@ -16,7 +16,5 @@
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from .generators import GANsPathGenerator, CyclicGeneratorGANs
-from .input_gen_layer import InputGenLayer, GANsCreationIterator
-from .map_methods import GANsIterator, LoadDataMethod, NormalizePostMethod, RGB2BGRPostMethod
-from .pipeline_base import GenLayer
+from .gans_iterator_base import GANsIterator
+from .input_gen_layer import InputGenLayer

@@ -18,7 +18,7 @@
 from .training_modules import AbsTrainingModule, MseTrainingModule, MaskedAbsTrainingModule, \
     MaskedMseTrainingModule, PerceptualTrainingModule, AdversarialTrainingModule
 
-from makiflow.models.gans.simple_gan import Discriminator
+from makiflow.models.gans.approaches.simple_gan.simple_gan import Discriminator
 from makiflow.models.gans.training_modules.binary_ce_loss import BinaryCETrainingModuleDiscriminator
 from makiflow.models.gans.utils import visualise_sheets_of_images
 from makiflow.generators.nn_render import NNRIterator
