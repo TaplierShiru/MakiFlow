@@ -188,7 +188,7 @@ class RGB2BGRPostMethod(TFRPostMapMethod):
             # Swap channels
             element[GANsIterator.IMAGE] = tf.reverse(target_tensor, axis=[-1], name=RGB2BGRPostMethod.RGB2BGR_TARGET_X)
 
-        if self.using_for_target_x:
+        if self.using_for_gen_input:
             # For generator input tensor
             gen_input_tensor = element[GANsIterator.GEN_INPUT]
             # Swap channels
@@ -254,24 +254,20 @@ class ResizePostMethod(TFRPostMapMethod):
         if self.target_tensor_size is not None:
             # For image
             target_tensor = element[GANsIterator.IMAGE]
-            target_tensor = tf.image.resize(
+            element[GANsIterator.IMAGE] = tf.image.resize(
                 images=target_tensor,
                 size=self.target_tensor_size,
                 method=self.target_tensor_resize_method
             )
 
-            element[GANsIterator.IMAGE] = target_tensor
-
         if self.gen_input_size is not None:
             # For generator input
             gen_input_tensor = element[GANsIterator.GEN_INPUT]
-            gen_input_tensor = tf.image.resize(
+            element[GANsIterator.GEN_INPUT] = tf.image.resize(
                 images=gen_input_tensor,
                 size=self.gen_input_size,
                 method=self.gen_input_resize_method
             )
-
-            element[GANsIterator.GEN_INPUT] = gen_input_tensor
 
         return element
 

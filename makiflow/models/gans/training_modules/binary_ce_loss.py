@@ -101,7 +101,7 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
         Method for training the model. Works faster than `verbose_fit` method because
         it uses exponential decay in order to speed up training. It produces less accurate
         train error measurement.
-
+        TODO: Update docs
         Parameters
         ----------
         Xtrain : numpy array
@@ -136,6 +136,7 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
 
         try:
             for i in range(epochs):
+                # TODO: Add batched iteration and shuffle for data if it's needed
                 if Xgen is not None:
                     generated = Xgen
                 else:

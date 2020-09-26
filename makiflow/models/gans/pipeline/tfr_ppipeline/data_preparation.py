@@ -32,9 +32,11 @@ GEN_INPUT_X_FNAME = 'GEN_INPUT_X_FNAME'
 def serialize_gans_data_point(target_tensor, gen_input, sess=None):
 
     feature = {
-        TARGET_X_FNAME: _tensor_to_byte_feature(target_tensor, sess),
-        GEN_INPUT_X_FNAME: _tensor_to_byte_feature(gen_input, sess)
+        TARGET_X_FNAME: _tensor_to_byte_feature(target_tensor, sess)
     }
+
+    if gen_input is not None:
+        feature.update({GEN_INPUT_X_FNAME: _tensor_to_byte_feature(gen_input, sess)})
 
     features = tf.train.Features(feature=feature)
     example_proto = tf.train.Example(features=features)
@@ -58,9 +60,9 @@ def record_gans_train_data(target_tensors, gen_inputs, tfrecord_path, sess=None)
 # Record data into multiple tfrecords
 def record_mp_gans_train_data(
         target_tensors,
-        gen_inputs,
         prefix,
         dp_per_record,
+        gen_inputs=None,
         sess=None):
     """
     Creates tfrecord dataset where each tfrecord contains `dp_per_second` data points
@@ -69,8 +71,6 @@ def record_mp_gans_train_data(
     ----------
     target_tensors : list or ndarray
         Array of target tensors.
-    gen_inputs : list or ndarray
-        Array of input tensors for generator.
     prefix : str
         Prefix for the tfrecords' names. All the filenames will have the same naming pattern:
         `prefix`_`tfrecord index`.tfrecord
@@ -78,12 +78,19 @@ def record_mp_gans_train_data(
         Data point per tfrecord. Defines how many tensors (locs, loc_masks, labels) will be
         put into one tfrecord file. It's better to use such `dp_per_record` that
         yields tfrecords of size 300-200 megabytes.
+    gen_inputs : list or ndarray
+        Array of input tensors for generator.
+        By default equal to None, i.e. not used in training
     sess : tf.Session
         In case if you can't or don't want to run TensorFlow eagerly, you can pass in the session object.
     """
     for i in range(len(target_tensors) // dp_per_record):
         target_tensor = target_tensors[dp_per_record * i: (i + 1) * dp_per_record]
-        gen_input = gen_inputs[dp_per_record * i: (i + 1) * dp_per_record]
+
+        if gen_inputs is not None:
+            gen_input = gen_inputs[dp_per_record * i: (i + 1) * dp_per_record]
+        else:
+            gen_input = [None] * dp_per_record
 
         tfrecord_name = SAVE_FORM.format(prefix, i)
 
