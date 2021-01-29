@@ -657,8 +657,9 @@ class ActivationLayer(MakiLayer):
 
 class FlattenLayer(MakiLayer):
     TYPE = 'FlattenLayer'
+    KEEP_DEPTH = 'keep_depth'
 
-    def __init__(self, name):
+    def __init__(self, name, keep_depth=False):
         """
         Flattens the input.
         Example: if input is [B1, H1, W1, C1], after this operation it would be [B1, C2], where C2 = H1 * W1 * C1
@@ -667,7 +668,10 @@ class FlattenLayer(MakiLayer):
         ----------
         name : str
             Name of this layer.
+        keep_depth : bool
+            If set to True, the input tensor will be reshaped as: [bs, ..., depth] -> [bs, -1, depth]
         """
+        self._keep_depth = keep_depth
         super().__init__(name, params=[],
                          regularize_params=[],
                          named_params_dict={}
@@ -676,6 +680,11 @@ class FlattenLayer(MakiLayer):
     def forward(self, X, computation_mode=MakiRestorable.INFERENCE_MODE):
         with tf.name_scope(computation_mode):
             with tf.name_scope(self.get_name()):
+                if self._keep_depth:
+                    shape = tf.shape(X)
+                    bs = shape[0]
+                    depth = shape[-1]
+                    return tf.reshape(X, shape=[bs, -1, depth])
                 return tf.contrib.layers.flatten(X)
 
     def training_forward(self, X):
@@ -684,14 +693,15 @@ class FlattenLayer(MakiLayer):
     @staticmethod
     def build(params: dict):
         name = params[MakiRestorable.NAME]
-
-        return FlattenLayer(name=name)
+        keep_depth = params.get(FlattenLayer.KEEP_DEPTH, False)
+        return FlattenLayer(name=name, keep_depth=keep_depth)
 
     def to_dict(self):
         return {
             MakiRestorable.FIELD_TYPE: FlattenLayer.TYPE,
             MakiRestorable.PARAMS: {
-                MakiRestorable.NAME: self.get_name()
+                MakiRestorable.NAME: self.get_name(),
+                FlattenLayer.KEEP_DEPTH: self._keep_depth
             }
         }
 
@@ -1086,6 +1096,64 @@ class ChannelShuffleLayer(MakiLayer):
         }
 
 
+class SinusEmbeddingLayer(MakiLayer):
+    TYPE = 'SinusEmbeddingLayer'
+    DIM = 'dim'
+    MAX_POWER = 'max_power'
+
+    def __init__(self, name, dim=64, max_power=15):
+        """
+        This layer was introduced in 'PARSENET: LOOKING WIDER TO SEE BETTER'.
+        Performs L2 normalization along feature dimension.
+        """
+        self._dim = dim
+        self._max_power = max_power
+
+        super().__init__(name, params=[],
+                         regularize_params=[],
+                         named_params_dict={}
+                         )
+
+    def forward(self, X: tf.Tensor, computation_mode=MakiRestorable.INFERENCE_MODE):
+        assert X.get_shape().as_list()[-1] == 2
+        x_en = []
+        y_en = []
+        # [bs, n, 2] -> [bs, n]
+        x, y = X[..., 0], X[..., 1]
+        for i in range(self._dim // 4):
+            scale = tf.math.pow(2., self._max_power * (i / self._dim))
+            x_en += [tf.sin(x * scale)]
+            x_en += [tf.cos(x * scale)]
+            y_en += [tf.sin(y * scale)]
+            y_en += [tf.cos(y * scale)]
+        return tf.stack(x_en + y_en, axis=-1)
+
+    def training_forward(self, X):
+        return self.forward(X, computation_mode=MakiRestorable.TRAINING_MODE)
+
+    @staticmethod
+    def build(params: dict):
+        name = params[MakiRestorable.NAME]
+        max_power = params[SinusEmbeddingLayer.MAX_POWER]
+        dim = params[SinusEmbeddingLayer.DIM]
+
+        return SinusEmbeddingLayer(
+            name=name,
+            dim=dim,
+            max_power=max_power
+        )
+
+    def to_dict(self):
+        return {
+            MakiRestorable.FIELD_TYPE: SinusEmbeddingLayer.TYPE,
+            MakiRestorable.PARAMS: {
+                MakiRestorable.NAME: self.get_name(),
+                SinusEmbeddingLayer.MAX_POWER: self._max_power,
+                SinusEmbeddingLayer.DIM: self._dim
+            }
+        }
+
+
 class UnTrainableLayerAddress:
     ADDRESS_TO_CLASSES = {
         InputLayer.TYPE: InputLayer,
@@ -1109,6 +1177,8 @@ class UnTrainableLayerAddress:
 
         ChannelSplitLayer.TYPE: ChannelSplitLayer,
         ChannelShuffleLayer.TYPE: ChannelShuffleLayer,
+
+        SinusEmbeddingLayer.TYPE: SinusEmbeddingLayer
     }
 
 

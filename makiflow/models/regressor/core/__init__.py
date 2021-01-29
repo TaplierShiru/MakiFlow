@@ -15,5 +15,5 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
-from .compile import BasicTrainingModule
-
+from .regressor_interface import RegressorInterface
+from .regressor_trainer import RegressorTrainer

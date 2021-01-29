@@ -14,8 +14,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+import copy
 
-from __future__ import absolute_import
+import matplotlib.pyplot as plt
+import numpy as np
 
-from makiflow.combined_models.word_grabber import WordGrabber
-del absolute_import
+
+plt.switch_backend('agg')
+# For loading dendrite images

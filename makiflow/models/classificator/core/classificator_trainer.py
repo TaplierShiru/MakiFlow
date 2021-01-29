@@ -43,7 +43,7 @@ class ClassificatorTrainer(MakiTrainer, ABC):
 
     def get_num_classes(self):
         assert self._num_classes is not None
-        assert self._num_classes
+        return self._num_classes
 
     def _setup_label_placeholders(self):
         logits = super().get_model().get_logits()
@@ -57,7 +57,7 @@ class ClassificatorTrainer(MakiTrainer, ABC):
             ClassificatorTrainer.WEIGHT_MAP: tf.placeholder(
                 dtype=tf.float32,
                 shape=[super().get_batch_size(), *logits_shape[1:-1]],
-                name=ClassificatorTrainer.LABELS
+                name=ClassificatorTrainer.WEIGHT_MAP
             )
         }
 
@@ -65,4 +65,3 @@ class ClassificatorTrainer(MakiTrainer, ABC):
         return {
             self._labels: 0
         }
-

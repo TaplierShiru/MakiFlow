@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
-from .training_modules import AbsTrainingModule, MseTrainingModule
+import tensorflow as tf
+from ..core import RegressorTrainer
+from makiflow.core import TrainerBuilder, Loss
 
 
-class Regressor(
-    AbsTrainingModule,
-    MseTrainingModule,
-):
+class AbsTrainer(RegressorTrainer):
+    TYPE = 'AbsTrainer'
 
-    @staticmethod
-    def from_json(path_to_model):
-        # TODO
-        pass
+    ABS_LOSS = 'ABS_LOSS'
 
-    pass
+    def _build_local_loss(self, prediction, label):
+        abs_loss = Loss.abs_loss(label, prediction, raw_tensor=True)
+        final_loss = tf.reduce_mean(abs_loss)
+        return final_loss
+
+
+TrainerBuilder.register_trainer(AbsTrainer)

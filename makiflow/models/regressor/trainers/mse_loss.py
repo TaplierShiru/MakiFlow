@@ -15,5 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
-from .regressorbasic import RegressorBasic
+import tensorflow as tf
+from ..core import RegressorTrainer
+from makiflow.core import TrainerBuilder, Loss
 
+
+class MseTrainer(RegressorTrainer):
+    TYPE = 'MseTrainer'
+
+    MSE_LOSS = 'MSE_LOSS'
+
+    def _build_local_loss(self, prediction, label):
+        mse_loss = Loss.mse_loss(label, prediction, raw_tensor=True)
+        final_loss = tf.reduce_mean(mse_loss)
+        return final_loss
+
+
+TrainerBuilder.register_trainer(MseTrainer)
