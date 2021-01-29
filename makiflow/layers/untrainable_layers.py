@@ -1044,7 +1044,7 @@ class ChannelShuffleLayer(MakiLayer):
     def forward(self, X, computation_mode=MakiRestorable.INFERENCE_MODE):
         with tf.name_scope(computation_mode):
             with tf.name_scope(self.get_name()):
-                
+
                 original_shape = X.get_shape()
                 c = original_shape[-1]
                 if c % self._num_groups != 0:
