@@ -26,7 +26,7 @@ from makiflow.models.gans.generator_model import GeneratorModel
 from makiflow.models.gans.utils import visualise_sheets_of_images
 
 
-class SimpleGAN:
+class GansController:
     SIMPLE_GAN = 'SimpleGAN'
 
     def __init__(

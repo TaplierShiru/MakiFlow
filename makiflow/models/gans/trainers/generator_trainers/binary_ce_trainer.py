@@ -40,7 +40,7 @@ class BinaryCETrainerGen(DiscriminatorTrainer):
 
 TrainerBuilder.register_trainer(BinaryCETrainerGen)
 
-
+"""
 class BinaryCETrainingModuleGenerator(BasicTrainingModule):
 
     TRAIN_COSTS = 'train costs'
@@ -82,36 +82,6 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
     def fit_ce(
             self, Xreal=None, Xgen=None, optimizer=None, epochs=1, global_step=None
     ):
-        """
-        Method for training the model. Works faster than `verbose_fit` method because
-        it uses exponential decay in order to speed up training. It produces less accurate
-        train error measurement.
-        TODO: Update docs
-        Parameters
-        ----------
-        Xtrain : numpy array
-            Training images stacked into one big array with shape (num_images, image_w, image_h, image_depth).
-        Ytrain : numpy array
-            Training label for each image in `Xtrain` array with shape (num_images).
-            IMPORTANT: ALL LABELS MUST BE NOT ONE-HOT ENCODED, USE SPARSE TRAINING DATA INSTEAD.
-        Xtest : numpy array
-            Same as `Xtrain` but for testing.
-        Ytest : numpy array
-            Same as `Ytrain` but for testing.
-        optimizer : tensorflow optimizer
-            Model uses tensorflow optimizers in order train itself.
-        epochs : int
-            Number of epochs.
-        test_period : int
-            Test begins each `test_period` epochs. You can set a larger number in order to
-            speed up training.
-        Returns
-        -------
-            python dictionary
-                Dictionary with all testing data(train error, train cost, test error, test cost)
-                for each test period.
-        """
-
         assert (optimizer is not None)
         assert (self._session is not None)
         train_op = self._minimize_ce_loss(optimizer, global_step)
@@ -148,3 +118,4 @@ class BinaryCETrainingModuleGenerator(BasicTrainingModule):
         finally:
             return {BinaryCETrainingModuleGenerator.TRAIN_COSTS: train_costs}
 
+"""
