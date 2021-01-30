@@ -42,7 +42,10 @@ class GeneratorTrainer(MakiTrainer, ABC):
         disc_output_x = discriminator.get_outputs()[0]
 
         connected_maki_tensors_output = self._connect_generator_disc_graph(gen_output_x, disc_in_x, disc_output_x)[0]
+        # TODO: Merged graph create another placeholder variable, which is needed in furhter usage
+        # TODO: (?), change vars name or ...
         connected_model = Regressor(in_x=[gen_in_x], out_x=[connected_maki_tensors_output], name='MergedGraph')
+        connected_model._label_tensors = model._label_tensors
         # TODO: Debuf this pease
         super().__init__(
             model=connected_model,
