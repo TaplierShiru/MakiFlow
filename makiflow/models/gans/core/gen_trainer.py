@@ -160,10 +160,12 @@ class GeneratorTrainer(MakiTrainer, ABC):
         return tf.add_n([0.0, *losses], name='total_loss')
 
     def _setup_label_placeholders(self):
+        print('setup')
         logits = super().get_model().get_logits()
         batch_size = super().get_batch_size()
         label_tensors = {}
         for l_single in logits:
+            print(f'create: label_{l_single.get_name()}  layers: {l_single.get_name()}')
             label_tensors[l_single.get_name()] = tf.placeholder(
                 dtype='float32', shape=[batch_size, *l_single.get_shape()[1:]], name=f'label_{l_single.get_name()}'
             )
