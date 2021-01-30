@@ -17,11 +17,11 @@
 
 import numpy as np
 import tensorflow as tf
-from makiflow.models.gans.core import DiscriminatorTrainer
+from makiflow.models.gans.core import GeneratorTrainer
 from makiflow.core import TrainerBuilder
 
 
-class BinaryCETrainerGen(DiscriminatorTrainer):
+class BinaryCETrainerGen(GeneratorTrainer):
     TYPE = 'BinaryCETrainerGen'
 
     BinaryCETrainerGen = 'BinaryCETrainerGen'
