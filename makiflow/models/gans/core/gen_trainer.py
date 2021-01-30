@@ -45,7 +45,6 @@ class GeneratorTrainer(MakiTrainer, ABC):
         # TODO: Merged graph create another placeholder variable, which is needed in furhter usage
         # TODO: (?), change vars name or ...
         connected_model = Regressor(in_x=[gen_in_x], out_x=[connected_maki_tensors_output], name='MergedGraph')
-        connected_model._label_tensors = discriminator._label_tensors
         # TODO: Debuf this pease
         super().__init__(
             model=connected_model,
