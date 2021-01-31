@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+import traceback
 
 import tensorflow as tf
 from tqdm import tqdm
@@ -286,14 +287,14 @@ class GansController:
 
                     visualise_sheets_of_images(
                         generated_images,
-                        prefix_name=SimpleGAN.SIMPLE_GAN,
+                        prefix_name=GansController.SIMPLE_GAN,
                         unique_index=i,
                         show_images=show_images,
                         use_BGR2RGB=use_BGR2RGB
                     )
 
         except Exception as ex:
-            print(ex)
+            print(traceback.print_exc())
             print('type of error is ', type(ex))
         finally:
             if iterator is not None:
