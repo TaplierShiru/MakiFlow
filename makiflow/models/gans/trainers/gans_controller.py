@@ -268,7 +268,8 @@ class GansController:
                     print('o: ', self._generator_discriminator.get_model().get_outputs())
                     print('la: ', self._generator_discriminator.get_labels())
 
-                    print('next1: ')
+                    print('next1: ', next(gen_gen_data)[0][0].shape)
+                    print('next2: ', next(gen_gen_data)[0][0].shape)
 
                     info_gen = self._generator_discriminator.fit_generator(
                         generator=gen_gen_data,
