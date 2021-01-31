@@ -260,7 +260,7 @@ class GansController:
                     # Train generator
                     data_for_gen_x = [x_gen_batch]
                     # if user use l1 or l2 loss
-                    if self._generator_discriminator.is_use_l1_or_l2_loss() is not None:
+                    if self._gen_in_input is None:
                         data_for_gen_x += [image_batch]
 
                     gen_gen_data = wrapper_gen(data_for_gen_x, y_generator)
