@@ -224,10 +224,21 @@ class GansController:
                     x_discriminator = np.concatenate([image_batch, generated_images]).astype(np.float32)
 
                     def wrapper_gen(x, y):
+                        counter = 0
+                        size = len(x) // batch_size
                         while True:
-                            yield tuple(x), tuple(y)
+                            batch_x = x[counter*batch_size: batch_size*(counter+1)]
+                            batch_y = y[counter*batch_size: batch_size*(counter+1)]
+                            yield [batch_x], [batch_y]
+                            counter += 1
+                            if counter != 0 and size == counter:
+                                counter = 0
+
                     print('x_disc: ', x_discriminator.shape)
                     gen_disc_data = wrapper_gen(x_discriminator, y_discriminator)
+
+                    print('x_disc next1: ', next(gen_disc_data)[0][0].shape)
+                    print('x_disc next2: ', next(gen_disc_data)[0][0].shape)
                     # Train discriminator
                     # TODO: Do test stuff with discriminator according to `test_period_disc`, i.e. call evaluate
                     info_discriminator = self._discriminator.fit_generator(
