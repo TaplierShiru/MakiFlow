@@ -53,8 +53,9 @@ class GeneratorTrainer(MakiTrainer, ABC):
         )
         # Set layers from generator in `generator_discriminator` as untrained
         untrain = []
-        generator_names = map(lambda x: x.get_name(), list(model.get_layers().values()))
-        for name in map(lambda x: x.get_name(), list(discriminator.get_layers().values())):
+        # TODO: Do something with `_1`, i.e. then reuse tensors
+        generator_names = map(lambda x: x.get_name() + '_1', list(model.get_layers().values()))
+        for name in map(lambda x: x.get_name() + '_1', list(discriminator.get_layers().values())):
             if name not in generator_names:
                 untrain.append((name, False))
 
