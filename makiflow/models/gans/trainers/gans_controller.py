@@ -234,11 +234,7 @@ class GansController:
                             if counter != 0 and size == counter:
                                 counter = 0
 
-                    print('x_disc: ', x_discriminator.shape)
                     gen_disc_data = wrapper_gen(x_discriminator, y_discriminator)
-
-                    print('x_disc next1: ', next(gen_disc_data)[0][0].shape)
-                    print('x_disc next2: ', next(gen_disc_data)[0][0].shape)
                     # Train discriminator
                     # TODO: Do test stuff with discriminator according to `test_period_disc`, i.e. call evaluate
                     info_discriminator = self._discriminator.fit_generator(
@@ -259,9 +255,13 @@ class GansController:
 
                     # Train generator
                     data_for_gen_x = [x_gen_batch]
+                    # TODO: Rewrite this shit somehow in more beautiful view
                     # if user use l1 or l2 loss
                     if self._gen_in_input is None:
                         data_for_gen_x += [image_batch]
+                    else:
+                        # Input only noise
+                        data_for_gen_x = data_for_gen_x[0]
 
                     gen_gen_data = wrapper_gen(data_for_gen_x, y_generator)
                     info_gen = self._generator_discriminator.fit_generator(
