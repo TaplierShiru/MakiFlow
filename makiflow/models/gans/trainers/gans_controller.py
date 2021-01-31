@@ -215,7 +215,7 @@ class GansController:
                     if self._gen_in_input is not None:
                         x_gen_batch = x_gen_batch_preload[current_batch_preload]
                     else:
-                        x_gen_batch = [self._generator.get_noise() for _ in range(batch_size)]
+                        x_gen_batch = self._generator.get_noise()
 
                     current_batch_preload += 1
 
