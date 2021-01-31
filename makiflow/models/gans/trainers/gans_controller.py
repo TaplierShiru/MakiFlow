@@ -266,12 +266,16 @@ class GansController:
                     gen_gen_data = wrapper_gen(data_for_gen_x, y_generator)
                     print('i: ', self._generator_discriminator.get_model().get_inputs())
                     print('o: ', self._generator_discriminator.get_model().get_outputs())
+                    print('la: ', self._generator_discriminator.get_labels())
+
+                    print('next1: ')
 
                     info_gen = self._generator_discriminator.fit_generator(
                         generator=gen_gen_data,
                         epochs=epochs_generator,
                         optimizer=optimizer_generator,
-                        global_step=global_step_gen
+                        global_step=global_step_gen,
+                        iter=1,
                     )
                     gen_cost = info_gen[list(info_gen.keys())[0]]
                     generator_cost = moving_average(generator_cost, sum(gen_cost) / len(gen_cost), j)
