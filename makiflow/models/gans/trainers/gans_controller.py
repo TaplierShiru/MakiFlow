@@ -69,7 +69,7 @@ class GansController:
         self._session = sess
 
         self._generator_discriminator._model._session = sess
-        self._discriminator.set_session(sess)
+        self._discriminator.get_models().set_session(sess)
         self._generator.set_session(sess)
 
     def set_python_generator(self, gen_in_target, gen_in_input):
