@@ -193,7 +193,7 @@ class Athena(TrainingCore):
 
         return loss_collectors
 
-    def fit_generator(self, generator, optimizer, epochs=1, iter=10, print_period=None, global_step=None):
+    def fit_generator(self, generator, optimizer, epochs=1, iter=10, print_period=None, global_step=None, use_tqdm_iterator=True):
         """
         Performs fitting of the model.
 
@@ -211,6 +211,9 @@ class Athena(TrainingCore):
             Every `print_period` training iterations the training info will be displayed.
         global_step
             Please refer to TensorFlow documentation about the global step for more info.
+        use_tqdm_iterator : bool
+            pass
+
         Returns
         -------
         dict
@@ -235,8 +238,11 @@ class Athena(TrainingCore):
         # This context manager is used to prevent tqdm from breaking in case of exception
         with IteratorCloser() as ic:
             for i in range(epochs):
-                it = tqdm(range(iter))
-                ic.set_iterator(it)
+                if use_tqdm_iterator:
+                    it = tqdm(range(iter))
+                    ic.set_iterator(it)
+                else:
+                    it = range(iter)
 
                 # Loss value holders. They will hold an interpolated loss value for one iteration.
                 # This loss value will then be passed to an appropriate loss value collector.
