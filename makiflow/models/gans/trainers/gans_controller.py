@@ -160,9 +160,9 @@ class GansController:
         batch_size = self._generator_discriminator.get_batch_size()
         discriminator_accuracy = []
         iterations = int(iterations / pre_download) * pre_download
-        y_discriminator = np.zeros((2 * batch_size, *self._discriminator.get_logits()[0].shape[1:])).astype(np.float32)
+        y_discriminator = np.zeros((2 * batch_size, *self._discriminator.get_logits()[0].get_shape()[1:])).astype(np.float32)
         y_discriminator[:batch_size, ...] = label_smoothing
-        y_generator = np.ones(self._generator_discriminator.get_logits()[0].shape).astype(np.float32)
+        y_generator = np.ones(self._generator_discriminator.get_logits()[0].get_shape()).astype(np.float32)
 
         iterator = None
         try:
