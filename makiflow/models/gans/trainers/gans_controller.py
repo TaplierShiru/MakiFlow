@@ -226,6 +226,7 @@ class GansController:
                     def wrapper_gen(x, y):
                         while True:
                             yield tuple(x), tuple(y)
+                    print('x_disc: ', x_discriminator.shape)
                     gen_disc_data = wrapper_gen(x_discriminator, y_discriminator)
                     # Train discriminator
                     # TODO: Do test stuff with discriminator according to `test_period_disc`, i.e. call evaluate
@@ -233,7 +234,8 @@ class GansController:
                         generator=gen_disc_data,
                         optimizer=optimizer_discriminator,
                         epochs=epochs_discriminator,
-                        global_step=global_step_disc
+                        global_step=global_step_disc,
+                        iter=2,
                     )
 
                     #if test_period_disc != -1:
