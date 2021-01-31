@@ -264,13 +264,6 @@ class GansController:
                         data_for_gen_x = data_for_gen_x[0]
 
                     gen_gen_data = wrapper_gen(data_for_gen_x, y_generator)
-                    print('i: ', self._generator_discriminator.get_model().get_inputs())
-                    print('o: ', self._generator_discriminator.get_model().get_outputs())
-                    print('la: ', self._generator_discriminator.get_labels())
-
-                    print('next1: ', next(gen_gen_data)[0][0].shape)
-                    print('next2: ', next(gen_gen_data)[0][0].shape)
-
                     info_gen = self._generator_discriminator.fit_generator(
                         generator=gen_gen_data,
                         epochs=epochs_generator,
