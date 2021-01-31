@@ -243,7 +243,8 @@ class GansController:
                         epochs=epochs_discriminator,
                         global_step=global_step_disc,
                         iter=2,
-                        use_tqdm_iterator=False
+                        use_tqdm_iterator=False,
+                        print_period=10, # do not print at all
                     )
 
                     #if test_period_disc != -1:
@@ -271,7 +272,8 @@ class GansController:
                         optimizer=optimizer_generator,
                         global_step=global_step_gen,
                         iter=1,
-                        use_tqdm_iterator=False
+                        use_tqdm_iterator=False,
+                        print_period=10, # do not print at all
                     )
                     gen_cost = info_gen[list(info_gen.keys())[0]]
                     generator_cost = moving_average(generator_cost, sum(gen_cost) / len(gen_cost), j)
