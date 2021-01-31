@@ -257,7 +257,7 @@ class GansController:
                     data_for_gen_x = [x_gen_batch]
                     # TODO: Rewrite this shit somehow in more beautiful view
                     # if user use l1 or l2 loss
-                    if self._gen_in_input is None:
+                    if self._gen_in_input is not None:
                         data_for_gen_x += [image_batch]
                     else:
                         # Input only noise
